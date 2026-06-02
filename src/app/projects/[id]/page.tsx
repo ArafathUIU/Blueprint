@@ -3,7 +3,8 @@ import { getProject } from "@/lib/store";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { UserStory, Wireframe, RoadmapPhase } from "@/lib/types";
+import { ExportButtons } from "@/components/export-buttons";
+import type { UserStory, Wireframe } from "@/lib/types";
 
 export default async function ProjectPage({
   params,
@@ -49,6 +50,11 @@ export default async function ProjectPage({
           </Badge>
         </div>
         <p className="max-w-2xl text-muted-foreground">{project.idea}</p>
+        {project.status === "complete" && (
+          <div className="mt-2">
+            <ExportButtons project={project} />
+          </div>
+        )}
       </div>
 
       {/* Research */}

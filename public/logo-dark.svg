@@ -1,16 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="300" height="80" viewBox="0 0 300 80" fill="none">
   <g transform="translate(8, 16)">
-    <rect x="0" y="0" width="48" height="48" rx="10" fill="#18181B"/>
-    <line x1="18" y1="10" x2="30" y2="10" stroke="#DC2626" stroke-width="1.2" opacity="0.8"/>
-    <line x1="33" y1="15" x2="21" y2="22" stroke="#DC2626" stroke-width="1.2" opacity="0.8"/>
-    <line x1="18" y1="29" x2="30" y2="24" stroke="#DC2626" stroke-width="1.2" opacity="0.8"/>
-    <line x1="30" y1="29" x2="21" y2="35" stroke="#DC2626" stroke-width="1.2" opacity="0.8"/>
-    <polygon points="13,5 18,10 13,15  8,10" fill="#18181B" stroke="#FFFFFF" stroke-width="0.8"/>
-    <polygon points="33,5 38,10 33,15 28,10" fill="#18181B" stroke="#FFFFFF" stroke-width="0.8"/>
-    <polygon points="13,19 18,24 13,29  8,24" fill="#DC2626" stroke="#FFFFFF" stroke-width="0.8"/>
-    <polygon points="33,19 38,24 33,29 28,24" fill="#18181B" stroke="#FFFFFF" stroke-width="0.8"/>
-    <polygon points="13,33 18,38 13,43  8,38" fill="#18181B" stroke="#FFFFFF" stroke-width="0.8"/>
+    <rect x="2" y="14" width="42" height="28" rx="3" fill="#DC2626"/>
+    <circle cx="12" cy="12" r="4.5" fill="#DC2626" stroke="#DC2626" stroke-width="0.8"/>
+    <circle cx="23" cy="12" r="4.5" fill="#DC2626" stroke="#DC2626" stroke-width="0.8"/>
+    <circle cx="34" cy="12" r="4.5" fill="#DC2626" stroke="#DC2626" stroke-width="0.8"/>
+    <line x1="16" y1="14" x2="16" y2="42" stroke="#FFFFFF" stroke-width="1" opacity="0.3"/>
+    <line x1="30" y1="14" x2="30" y2="42" stroke="#FFFFFF" stroke-width="1" opacity="0.3"/>
+    <line x1="2" y1="28" x2="44" y2="28" stroke="#FFFFFF" stroke-width="1" opacity="0.3"/>
   </g>
-  <text x="64" y="51" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="600" letter-spacing="-0.5" fill="#FFFFFF">blueprint</text>
-  <rect x="185" y="55" width="60" height="2.5" rx="1.25" fill="#DC2626"/>
+  <text x="62" y="51" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="600" letter-spacing="-0.5" fill="#FFFFFF">blueprint</text>
+  <rect x="183" y="55" width="60" height="2.5" rx="1.25" fill="#DC2626"/>
 </svg>

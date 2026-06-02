@@ -1,34 +1,39 @@
 import { runAgentStructured } from "../ai";
 import type { Wireframe, UserStory } from "../types";
 
-const SYSTEM_PROMPT = `You are an expert UX designer who creates wireframe specifications. Given user stories, generate low-fidelity wireframe specifications. Output ONLY valid JSON:
+const SYSTEM_PROMPT = `You are an expert UX designer creating wireframe specifications. Given user stories, generate low-fidelity wireframe specs. Output ONLY valid JSON:
 
 Array of:
 {
   "id": "WF-XXX",
   "title": "Screen name",
-  "description": "What this screen does and shows",
-  "svg": "A valid SVG string representing a simple wireframe mockup. Use a 400x300 viewBox, white background with a light gray #f4f4f5 border. Use gray rectangles for UI elements, black text for labels, red #DC2626 for primary CTAs. Keep it clean, modern, and readable.",
-  "annotations": ["Annotation 1 about a UI element", "Annotation 2"],
-  "linkedStories": ["US-XXX", "US-YYY"]
+  "description": "Brief 1-sentence screen purpose",
+  "svg": "<svg viewBox='0 0 400 300' xmlns='http://www.w3.org/2000/svg'><rect width='400' height='300' fill='#fff'/><rect x='10' y='10' width='380' height='30' rx='6' fill='#f4f4f5' stroke='#e4e4e7'/><text x='20' y='30' font-family='sans-serif' font-size='13' fill='#18181b'>[Page Title]</text><!-- add 3-5 simple UI blocks --></svg>",
+  "annotations": ["Short annotation"],
+  "linkedStories": ["US-XXX"]
 }
 
-Rules:
-- Create 3-5 wireframes
-- Each wireframe should map to relevant user stories
-- SVGs must be functional - use simple shapes (rectangles, text, lines)
-- Include a main dashboard/home screen, a key feature screen, and a results/output screen
-- Annotations should explain UI decisions linked to user needs
-- Use a clean, professional wireframe style`;
+SVG Rules (CRITICAL for speed - keep it minimal):
+- viewBox 0 0 400 300
+- White #fff background rect
+- Use ONLY simple gray #f4f4f5 rects for UI blocks with #e4e4e7 stroke
+- Red #DC2626 for exactly ONE primary CTA button
+- Black #18181b text 12-14px sans-serif
+- No gradients, no filters, no complex paths
+- Maximum 8 elements per wireframe
+- Keep it clean and readable
+
+Generate EXACTLY 3 wireframes. Do NOT over-design.`;
 
 export async function wireframeAgent(stories: UserStory[]): Promise<Wireframe[]> {
   const storySummary = stories
+    .slice(0, 8)
     .map((s) => `[${s.id}] ${s.story}`)
     .join("\n");
 
   return runAgentStructured<Wireframe[]>({
     systemPrompt: SYSTEM_PROMPT,
-    userPrompt: `User Stories:\n${storySummary}`,
+    userPrompt: `User Stories (top priority):\n${storySummary}\n\nCreate 3 wireframes. Be fast and minimal.`,
     schema: "Wireframe[]",
   });
 }

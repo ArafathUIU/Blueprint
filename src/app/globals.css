@@ -135,3 +135,17 @@ body {
     @apply font-sans;
   }
 }
+
+@media print {
+  header, nav, .export-buttons, .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+  }
+  .card, table, section {
+    break-inside: avoid;
+  }
+}
