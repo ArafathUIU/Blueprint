@@ -1,29 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="260" viewBox="0 0 200 260" fill="none">
-  <!-- Icon -->
   <g transform="translate(64, 30)">
     <rect x="0" y="0" width="72" height="72" rx="14" fill="#18181B"/>
-
-    <!-- Connecting lines -->
     <line x1="26" y1="14" x2="46" y2="14" stroke="#DC2626" stroke-width="1.5" opacity="0.8"/>
     <line x1="52" y1="22" x2="30" y2="32" stroke="#DC2626" stroke-width="1.5" opacity="0.8"/>
     <line x1="26" y1="44" x2="46" y2="36" stroke="#DC2626" stroke-width="1.5" opacity="0.8"/>
     <line x1="46" y1="44" x2="30" y2="52" stroke="#DC2626" stroke-width="1.5" opacity="0.8"/>
-
-    <!-- Diamond 1: TL -->
     <polygon points="20,6 26,14 20,22 14,14" fill="#18181B" stroke="#FFFFFF" stroke-width="1"/>
-    <!-- Diamond 2: TR -->
     <polygon points="52,6 58,14 52,22 46,14" fill="#18181B" stroke="#FFFFFF" stroke-width="1"/>
-    <!-- Diamond 3: ML (accent) -->
     <polygon points="20,28 26,36 20,44 14,36" fill="#DC2626" stroke="#FFFFFF" stroke-width="1"/>
-    <!-- Diamond 4: BR -->
     <polygon points="52,28 58,36 52,44 46,36" fill="#18181B" stroke="#FFFFFF" stroke-width="1"/>
-    <!-- Diamond 5: BL -->
     <polygon points="20,50 26,58 20,66 14,58" fill="#18181B" stroke="#FFFFFF" stroke-width="1"/>
   </g>
-
-  <!-- Wordmark -->
   <text x="100" y="145" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="30" font-weight="600" letter-spacing="-0.5" fill="#18181B">blueprint</text>
-
-  <!-- Red accent underscore under "print" -->
   <rect x="96" y="152" width="72" height="3" rx="1.5" fill="#DC2626"/>
 </svg>
