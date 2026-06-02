@@ -1,6 +1,31 @@
+import Link from "next/link";
+import { listProjects } from "@/lib/store";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+
 export default function Home() {
+  let projects: ReturnType<typeof listProjects>;
+
+  try {
+    projects = listProjects();
+  } catch {
+    projects = [];
+  }
+
+  const statusLabel: Record<string, string> = {
+    draft: "Draft",
+    researching: "Researching...",
+    generating_stories: "Stories...",
+    generating_wireframes: "Wireframes...",
+    generating_prd: "PRD...",
+    generating_roadmap: "Roadmap...",
+    complete: "Complete",
+    error: "Error",
+  };
+
   return (
     <div className="flex flex-1 flex-col">
+      {/* Hero */}
       <section className="flex flex-1 flex-col items-center justify-center px-4 py-24 text-center">
         <img
           src="/logo-vertical.svg"
@@ -13,13 +38,51 @@ export default function Home() {
           stories, wireframes, PRDs, and development roadmap — all in one
           continuous workflow.
         </p>
-        <a
+        <Link
           href="/new"
           className="inline-flex h-12 items-center justify-center rounded-xl bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           Start a new product blueprint
-        </a>
+        </Link>
       </section>
+
+      {/* Recent Projects */}
+      {projects.length > 0 && (
+        <section className="mx-auto w-full max-w-4xl px-6 pb-24">
+          <h2 className="mb-6 text-lg font-bold tracking-tight">
+            Recent Blueprints
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {projects.map((p) => (
+              <Link key={p.id} href={`/projects/${p.id}`}>
+                <Card className="h-full transition-shadow hover:shadow-md">
+                  <CardContent className="flex flex-col gap-2 py-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-medium text-sm line-clamp-1">
+                        {p.name}
+                      </h3>
+                      <Badge
+                        variant={
+                          p.status === "complete" ? "default" : "secondary"
+                        }
+                        className="shrink-0 text-[10px]"
+                      >
+                        {statusLabel[p.status] || p.status}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {p.idea}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/60">
+                      {new Date(p.updatedAt).toLocaleDateString()}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
