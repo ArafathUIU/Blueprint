@@ -243,7 +243,15 @@ export default function Home() {
         </div>
 
         <p className="mt-6 text-center text-sm font-normal text-white/15">
-          Built with OpenCode Go · DeepSeek V4 Pro · Next.js 16
+          Built by Md. Arafath Hossain Akash ·{" "}
+          <a
+            href="https://github.com/ArafathUIU"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/20 underline-offset-2 hover:text-white/40"
+          >
+            github.com/ArafathUIU
+          </a>
         </p>
       </section>
     </div>
