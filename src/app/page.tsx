@@ -12,23 +12,47 @@ import {
 
 const TERMINAL_LINES = [
   { text: "blueprint --init", prefix: ">" },
-  { text: "connecting to agent core...", prefix: "  ", delay: 600 },
-  { text: "loading market research engine", prefix: "  ", delay: 300 },
-  { text: "loading story generator", prefix: "  ", delay: 200 },
-  { text: "loading wireframe designer", prefix: "  ", delay: 200 },
-  { text: "loading PRD assembler", prefix: "  ", delay: 200 },
-  { text: "loading roadmap planner", prefix: "  ", delay: 200 },
-  { text: "all systems ready.", prefix: "  ", delay: 500 },
-  { text: "", prefix: "", delay: 600 },
-  { text: 'blueprint --new "ai fitness app"', prefix: ">", delay: 700 },
-  { text: "→ researching market (TAM: $4.2B, 5 competitors)", prefix: "  ", delay: 400 },
-  { text: "→ generating 12 user stories across 3 epics", prefix: "  ", delay: 350 },
-  { text: "→ rendering 3 wireframe screens", prefix: "  ", delay: 350 },
-  { text: "→ assembling PRD with goals & risk matrix", prefix: "  ", delay: 350 },
-  { text: "→ building 4-phase development roadmap", prefix: "  ", delay: 350 },
-  { text: "done. 5/5 agents complete. opening project view...", prefix: "  ", delay: 600 },
+  { text: "booting agent runtime...", prefix: "  ", delay: 500 },
+  { text: "connecting to opencode go (deepseek-v4-pro)", prefix: "  ", delay: 300 },
   { text: "", prefix: "", delay: 400 },
-  { text: "blueprint v1.0 — 10x faster than manual. ready.", prefix: ">", delay: 500 },
+
+  // Research thinking
+  { text: "blueprint --new \"ai fitness coach\"", prefix: ">", delay: 600 },
+  { text: "[thinking] ok, let me analyze this product idea...", prefix: "  ", delay: 400 },
+  { text: "[thinking] fitness + AI = large market. post-pandemic health awareness is surging. wearable adoption at all-time high. this is a valid category.", prefix: "  ", delay: 200 },
+  { text: "[research] searching for market data on AI fitness apps...", prefix: "  ", delay: 300 },
+  { text: "[research] TAM estimated at $4.2B, growing at 28% CAGR (source: industry aggregate 2026)", prefix: "  ", delay: 400 },
+  { text: "[research] top competitors identified: Freeletics (brand, no AI), Nike Training Club (ecosystem, no personalization), Future.co (1:1 coaching, expensive $149/mo)", prefix: "  ", delay: 400 },
+  { text: "[research] key gap: no competitor combines real-time biometrics + AI-driven plan adaptation. our differentiator is hyper-personalization at $9.99/mo.", prefix: "  ", delay: 400 },
+  { text: "[research] viability score: 78/100. strong market, weak moat, execution-heavy.", prefix: "  ", delay: 400 },
+
+  // Stories thinking
+  { text: "[thinking] now structuring user stories. need 3 personas...", prefix: "  ", delay: 500 },
+  { text: "[stories] generating 14 stories across 3 epics (onboarding, core workout, progress tracking)", prefix: "  ", delay: 300 },
+  { text: "[stories] US-001: AI workout engine that cycles plans based on 24h biometric delta. P0 · Must", prefix: "  ", delay: 300 },
+  { text: "[stories] US-004: equipment-aware planner that adapts when user switches gym/home/travel. P0 · Must", prefix: "  ", delay: 300 },
+  { text: "[stories] US-009: progress dashboard with streak tracking, body metrics, and adaptive goals. P1 · Should", prefix: "  ", delay: 300 },
+  { text: "[stories] MoSCoW: 4 Must · 5 Should · 3 Could · 2 Won't. strong MVP scope.", prefix: "  ", delay: 300 },
+
+  // Wireframes
+  { text: "[wireframes] rendering 3 screens: dashboard, workout builder, progress view...", prefix: "  ", delay: 400 },
+  { text: "[wireframes] done. clean mobile-first layouts. red CTA for primary actions.", prefix: "  ", delay: 300 },
+
+  // PRD
+  { text: "[prd] assembling document from research + stories + wireframes...", prefix: "  ", delay: 400 },
+  { text: "[prd] goals defined: D7 retention >40%, workout completion rate >65%, NPS >50", prefix: "  ", delay: 300 },
+  { text: "[prd] risks: AI hallucination (med), biometric privacy compliance (high), user trust (high)", prefix: "  ", delay: 300 },
+
+  // Roadmap
+  { text: "[roadmap] planning phases...", prefix: "  ", delay: 400 },
+  { text: "[roadmap] phase 1 (wks 1-4): MVP — auth, AI engine, basic workout UI, biometric input", prefix: "  ", delay: 300 },
+  { text: "[roadmap] phase 2 (wks 5-8): social features, progress analytics, wearable sync (Apple Health, Fitbit)", prefix: "  ", delay: 300 },
+  { text: "[roadmap] phase 3 (wks 9-12): coach marketplace, API for gyms, enterprise tier", prefix: "  ", delay: 300 },
+
+  { text: "", prefix: "", delay: 400 },
+  { text: "pipeline complete. 5/5 agents ran successfully.", prefix: ">", delay: 500 },
+  { text: "total time: 4.2 minutes. output: 14 stories · 3 wireframes · 1 PRD · 1 roadmap", prefix: "  ", delay: 400 },
+  { text: "blueprint v1.0 — from idea to roadmap in one workflow.", prefix: ">", delay: 600 },
 ];
 
 const HOW_IT_WORKS = [
