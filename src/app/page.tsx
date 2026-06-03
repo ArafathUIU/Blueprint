@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { TerminalTypewriter } from "@/components/terminal-typewriter";
 import {
@@ -79,6 +79,17 @@ export default function Home() {
   const [heroReady, setHeroReady] = useState(false);
   const [showCTA, setShowCTA] = useState(false);
 
+  // Show headline after 2.5s — before terminal finishes
+  useEffect(() => {
+    const t = setTimeout(() => setHeroReady(true), 2500);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Show CTA when terminal completes or after ~8s
+  function handleTerminalDone() {
+    if (!showCTA) setTimeout(() => setShowCTA(true), 600);
+  }
+
   return (
     <div className="flex flex-1 flex-col">
       {/* ── Hero Section ── */}
@@ -102,7 +113,7 @@ export default function Home() {
               lines={TERMINAL_LINES}
               onComplete={() => {
                 setHeroReady(true);
-                setTimeout(() => setShowCTA(true), 1000);
+                handleTerminalDone();
               }}
             />
           </div>
@@ -122,8 +133,8 @@ export default function Home() {
           <h2 className="mt-2 font-sans text-[28px] font-bold tracking-tight text-red-500 sm:text-5xl">
             in one workflow
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-lg leading-relaxed text-white/60 sm:text-xl">
-            Research. Stories. Wireframes. PRD. Roadmap.
+          <p className="mx-auto mt-4 max-w-md text-lg leading-relaxed tracking-wider text-white/60 sm:text-xl">
+            RESEARCH. STORIES. WIREFRAMES. PRD. ROADMAP.
           </p>
           <p className="mx-auto mt-1 max-w-md text-sm font-normal leading-relaxed text-white/25">
             An autonomous AI agent that collapses 6 tools into 1.
