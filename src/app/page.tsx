@@ -179,34 +179,40 @@ export default function Home() {
           </div>
           <div className="flex flex-col gap-0 rounded-xl bg-zinc-900/80 px-5 py-4 font-mono text-xs leading-relaxed">
             <span className="text-white/25">
-              {"# "}Market Research
+              {"# "}Market Research — 78/100 viability
             </span>
-            <span className="text-white/10">
-              {"## "}TAM: $4.2B · SAM: $890M · SOM: $45M
+            <span className="text-white/15">
+              {"## "}TAM $4.2B growing at 28% CAGR
             </span>
-            <span className="text-white/10">
-              {"## "}Competitors: Freeletics, Nike Training, Future.co
+            <span className="text-white/15">
+              {"## "}5 competitors mapped: gaps in AI personalization
             </span>
-            <span className="mt-3 text-white/25">
-              {"# "}User Stories
-            </span>
-            <span className="text-white/10">
-              {"## "}US-001 — As a user, I want AI-generated workout plans
-            </span>
-            <span className="text-white/10">
-              {"## "}US-004 — As a user, I want biometric-based personalization
-            </span>
-            <span className="text-white/10">
-              {"## "}12 stories across 3 epics · P0: 4 · P1: 5 · P2: 3
+            <span className="text-white/15">
+              {"## "}3 personas: fitness beginner, gym regular, PT
             </span>
             <span className="mt-3 text-white/25">
-              {"# "}Roadmap
+              {"# "}User Stories — 14 generated, MoSCoW ranked
             </span>
-            <span className="text-white/10">
-              {"## "}Phase 1 — MVP (Weeks 1-4): Auth, AI engine, basic UI
+            <span className="text-white/15">
+              {"## "}US-001 AI workout engine • cycles biometrics every 24h
             </span>
-            <span className="text-white/10">
-              {"## "}Phase 2 — Growth (Weeks 5-8): Social, analytics, export
+            <span className="text-white/15">
+              {"## "}US-004 equipment-aware planner • adapts in real time
+            </span>
+            <span className="text-white/15">
+              {"## "}US-009 progress dashboard • streak tracking, body metrics
+            </span>
+            <span className="mt-3 text-white/25">
+              {"# "}Roadmap — shipping in 3 phases
+            </span>
+            <span className="text-white/15">
+              {"## "}Phase 1 — Core (Weeks 1-4): AI planner, auth, workout UI
+            </span>
+            <span className="text-white/15">
+              {"## "}Phase 2 — Growth (Weeks 5-8): social, analytics, wearables
+            </span>
+            <span className="text-white/15">
+              {"## "}Phase 3 — Scale (Weeks 9-12): marketplace, coach tools, API
             </span>
             <span className="mt-3 inline-block h-3 w-2 animate-pulse bg-red-500/50" />
           </div>
