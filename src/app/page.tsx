@@ -69,17 +69,17 @@ export default function Home() {
         {/* Terminal window */}
         <div className="relative z-10 w-full max-w-2xl">
           {/* Window chrome */}
-          <div className="flex items-center gap-1.5 rounded-t-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2.5 backdrop-blur-sm">
+          <div className="flex items-center gap-1.5 rounded-t-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 backdrop-blur-sm">
             <div className="h-2.5 w-2.5 rounded-full bg-red-500/60" />
             <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/60" />
             <div className="h-2.5 w-2.5 rounded-full bg-green-500/60" />
-            <span className="ml-2 font-sans text-[10px] text-white/20 tracking-wider uppercase">
+            <span className="ml-2 font-sans text-[10px] text-white/30 tracking-wider uppercase">
               blueprint.app
             </span>
           </div>
 
           {/* Terminal body */}
-          <div className="rounded-b-xl border border-t-0 border-white/[0.06] bg-black/60 px-6 py-6 backdrop-blur-md min-h-[380px]">
+          <div className="rounded-b-xl border border-t-0 border-white/[0.08] bg-zinc-900/70 shadow-2xl shadow-black/60 ring-1 ring-white/[0.05] px-6 py-6 backdrop-blur-md min-h-[380px]">
             <TerminalTypewriter
               lines={TERMINAL_LINES}
               onComplete={() => {
@@ -168,16 +168,16 @@ export default function Home() {
 
       {/* ── Output Preview Card ── */}
       <section className="relative z-10 mx-auto w-full max-w-2xl px-6 pb-20">
-        <div className="rounded-2xl border border-white/[0.06] bg-black/40 p-1 backdrop-blur-md">
+        <div className="rounded-2xl border border-white/[0.08] bg-zinc-900/50 shadow-2xl shadow-black/60 ring-1 ring-white/[0.05] p-1 backdrop-blur-md">
           <div className="flex items-center gap-1.5 rounded-t-xl px-4 py-2.5">
             <div className="h-2 w-2 rounded-full bg-red-500/60" />
             <div className="h-2 w-2 rounded-full bg-yellow-500/60" />
             <div className="h-2 w-2 rounded-full bg-green-500/60" />
-            <span className="ml-2 font-mono text-[10px] text-white/20">
+            <span className="ml-2 font-mono text-[10px] text-white/30">
               output/sample-blueprint.md
             </span>
           </div>
-          <div className="flex flex-col gap-0 rounded-xl bg-black/60 px-5 py-4 font-mono text-xs leading-relaxed">
+          <div className="flex flex-col gap-0 rounded-xl bg-zinc-900/80 px-5 py-4 font-mono text-xs leading-relaxed">
             <span className="text-white/25">
               {"# "}Market Research
             </span>
