@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 type RingState = "idle" | "streaming" | "complete" | "error";
 
@@ -64,8 +63,9 @@ const fragmentShader = /* glsl */ `
     float colorMix = smoothstep(0.15, 0.6, dist);
     vec3 color = mix(coreColor, glowColor, colorMix);
 
-    float glowAlpha = alpha * vAlpha * (0.6 + uGlow * 0.4);
-    gl_FragColor = vec4(color, glowAlpha);
+    // uGlow controls overall brightness multiplier
+    float glowAlpha = alpha * vAlpha * (0.6 + uGlow * 0.5);
+    gl_FragColor = vec4(color * (0.5 + uGlow * 0.5), glowAlpha);
   }
 `;
 
@@ -74,9 +74,10 @@ interface RingLayerProps {
   radiusBase: number;
   amplitude?: number;
   frequency?: number;
+  glow?: number;
 }
 
-function RingLayer({ count, radiusBase, amplitude = 1, frequency = 8 }: RingLayerProps) {
+function RingLayer({ count, radiusBase, amplitude = 1, frequency = 8, glow = 0.5 }: RingLayerProps) {
   const meshRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
@@ -113,10 +114,17 @@ function RingLayer({ count, radiusBase, amplitude = 1, frequency = 8 }: RingLaye
       uTime: { value: 0 },
       uAmplitude: { value: amplitude },
       uFrequency: { value: frequency },
-      uGlow: { value: 1.0 },
+      uGlow: { value: 0.5 },
     }),
     [amplitude, frequency]
   );
+
+  // Update glow uniform when prop changes
+  useEffect(() => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.uGlow.value = glow;
+    }
+  }, [glow]);
 
   useFrame((_, delta) => {
     if (materialRef.current) {
@@ -147,39 +155,28 @@ interface ParticleRingProps {
 }
 
 export function ParticleRing({ state = "idle" }: ParticleRingProps) {
-  const bloomRef = useRef<any>(null);
-  const targetGlow = useRef(0.5);
-  const currentGlow = useRef(0.5);
+  const [glowIntensity, setGlowIntensity] = useState(0.5);
+  const glowTarget = useRef(0.5);
 
   useFrame((_, delta) => {
-    const target = state === "streaming" ? 1.6 : state === "complete" ? 2.0 : state === "error" ? 0.2 : 0.5;
-    targetGlow.current += (target - targetGlow.current) * delta * 3;
-    currentGlow.current = targetGlow.current;
-
-    if (bloomRef.current) {
-      bloomRef.current.intensity = currentGlow.current;
-    }
+    // Lerp glow target based on state
+    const target =
+      state === "streaming"
+        ? 1.4
+        : state === "complete"
+          ? 2.0
+          : state === "error"
+            ? 0.1
+            : 0.5;
+    glowTarget.current += (target - glowTarget.current) * delta * 4;
+    setGlowIntensity(glowTarget.current);
   });
 
-  const sceneRotationSpeed = state === "streaming" ? 0.15 : state === "complete" ? 0.05 : 0.08;
-
   return (
-    <>
-      <EffectComposer>
-        <Bloom
-          ref={bloomRef}
-          luminanceThreshold={0.2}
-          luminanceSmoothing={0.9}
-          intensity={0.5}
-          radius={0.5}
-        />
-      </EffectComposer>
-
-      <group rotation={[0.4, 0, 0]}>
-        <RingLayer count={8000} radiusBase={1.6} amplitude={0.6} frequency={7} />
-        <RingLayer count={12000} radiusBase={2.0} amplitude={0.45} frequency={9} />
-        <RingLayer count={8000} radiusBase={2.4} amplitude={0.3} frequency={11} />
-      </group>
-    </>
+    <group rotation={[0.4, 0, 0]}>
+      <RingLayer count={8000} radiusBase={1.6} amplitude={0.6} frequency={7} glow={glowIntensity} />
+      <RingLayer count={12000} radiusBase={2.0} amplitude={0.45} frequency={9} glow={glowIntensity} />
+      <RingLayer count={8000} radiusBase={2.4} amplitude={0.3} frequency={11} glow={glowIntensity} />
+    </group>
   );
 }
