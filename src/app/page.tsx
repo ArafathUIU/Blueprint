@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { TerminalTypewriter } from "@/components/terminal-typewriter";
-import { AudioWaveform } from "@/components/audio-waveform";
 import {
   FileText,
   Download,
@@ -79,16 +78,11 @@ const HOW_IT_WORKS = [
 export default function Home() {
   const [heroReady, setHeroReady] = useState(false);
   const [showCTA, setShowCTA] = useState(false);
-  const [showWaveform, setShowWaveform] = useState(false);
 
   return (
     <div className="flex flex-1 flex-col">
       {/* ── Hero Section ── */}
       <section className="relative flex flex-col items-center justify-center px-4 pt-16 pb-8">
-        {/* Waveform at bottom of hero */}
-        <div className="absolute bottom-0 left-0 right-0 h-20 z-0 opacity-40">
-          {showWaveform && <AudioWaveform state="streaming" />}
-        </div>
 
         {/* Terminal window */}
         <div className="relative z-10 w-full max-w-2xl">
@@ -108,10 +102,7 @@ export default function Home() {
               lines={TERMINAL_LINES}
               onComplete={() => {
                 setHeroReady(true);
-                setTimeout(() => {
-                  setShowWaveform(true);
-                  setTimeout(() => setShowCTA(true), 600);
-                }, 400);
+                setTimeout(() => setShowCTA(true), 1000);
               }}
             />
           </div>

@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LiveStreamPanel, type StreamEntry } from "@/components/live-stream-panel";
-import { AudioWaveform } from "@/components/audio-waveform";
 import { cn } from "@/lib/utils";
 
 const ORDER = ["research", "stories", "wireframes", "prd", "roadmap"];
@@ -39,7 +38,6 @@ export default function NewProjectPage() {
     roadmap: "idle",
   });
   const [entries, setEntries] = useState<StreamEntry[]>([]);
-  const [waveformActive, setWaveformActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentStreamStep, setCurrentStreamStep] = useState<string | null>(null);
   const streamTextRef = useRef<Record<string, string>>({});
@@ -54,7 +52,6 @@ export default function NewProjectPage() {
     setLoading(true);
     setError(null);
     setEntries([]);
-    setWaveformActive(true);
     setStepStates({
       research: "idle",
       stories: "idle",
@@ -181,7 +178,6 @@ export default function NewProjectPage() {
 
               case "done": {
                 setCurrentStreamStep(null);
-                setWaveformActive(false);
                 setTimeout(() => {
                   router.push(`/projects/${event.projectId as string}`);
                 }, 1500);
@@ -200,7 +196,6 @@ export default function NewProjectPage() {
       setError(msg);
     } finally {
       setLoading(false);
-      setWaveformActive(false);
     }
   }
 
@@ -211,13 +206,6 @@ export default function NewProjectPage() {
 
   return (
     <div className="relative min-h-[calc(100vh-3.5rem)]">
-      {/* Waveform at bottom during generation */}
-      {waveformActive && (
-        <div className="absolute bottom-0 left-0 right-0 z-0 h-28 opacity-30">
-          <AudioWaveform state="streaming" />
-        </div>
-      )}
-
       <div className="relative z-10 mx-auto flex max-w-3xl flex-col gap-8 px-6 py-12">
         {/* Form */}
         {!loading && (
