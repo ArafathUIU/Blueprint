@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlinkSync } from "fs";
 import { join } from "path";
 import { v4 as uuidv4 } from "uuid";
 import type { Project } from "./types";
@@ -71,4 +71,11 @@ export function updateProject(
   const updated = { ...project, ...updates };
   saveProject(updated);
   return updated;
+}
+
+export function deleteProject(id: string): boolean {
+  const path = projectPath(id);
+  if (!existsSync(path)) return false;
+  unlinkSync(path);
+  return true;
 }

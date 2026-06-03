@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listProjects } from "@/lib/store";
+import { DeleteButton } from "@/components/delete-button";
 
 const STATUS_COLORS: Record<string, string> = {
   complete: "bg-green-600 text-white",
@@ -72,9 +73,12 @@ export default function ProjectsListPage() {
             <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-5 transition-all hover:border-zinc-700 hover:bg-zinc-800/80">
               <div className="flex items-start justify-between gap-3 mb-2">
                 <h3 className="font-semibold text-white group-hover:text-red-400 transition-colors line-clamp-1">{p.name}</h3>
-                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[p.status] || "bg-zinc-700 text-zinc-300"}`}>
-                  {STATUS_LABELS[p.status] || p.status}
-                </span>
+                <div className="flex items-center gap-1">
+                  <DeleteButton projectId={p.id} projectName={p.name} />
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[p.status] || "bg-zinc-700 text-zinc-300"}`}>
+                    {STATUS_LABELS[p.status] || p.status}
+                  </span>
+                </div>
               </div>
               <p className="text-xs text-zinc-500 line-clamp-2 mb-3">{p.idea}</p>
               <div className="flex items-center gap-3 text-[10px] text-zinc-600">

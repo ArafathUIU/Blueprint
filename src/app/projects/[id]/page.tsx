@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getProject } from "@/lib/store";
 import { ExportButtons } from "@/components/export-buttons";
+import { DeleteButton } from "@/components/delete-button";
 import type { UserStory, Wireframe } from "@/lib/types";
 
 export default async function ProjectPage({
@@ -31,6 +32,7 @@ export default async function ProjectPage({
           <span className={`rounded-full px-3 py-0.5 text-xs font-semibold ${project.status === "complete" ? "bg-green-600 text-white" : project.status === "error" ? "bg-red-600 text-white" : "bg-zinc-700 text-zinc-300"}`}>
             {project.status.replace(/_/g, " ")}
           </span>
+          <DeleteButton projectId={project.id} projectName={project.name} redirectTo="/projects" />
         </div>
         <p className="max-w-2xl text-sm text-zinc-400">{project.idea}</p>
         {(project.status === "complete" || project.research || project.stories) && (
