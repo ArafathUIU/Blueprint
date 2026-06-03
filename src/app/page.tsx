@@ -242,13 +242,15 @@ export default function Home() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-sm font-normal text-white/15">
-          Built by Md. Arafath Hossain Akash ·{" "}
+        <p className="mt-6 text-center text-sm font-normal text-white/80">
+          Built by{" "}
+          <span className="font-semibold">Md. Arafath Hossain Akash</span>
+          {" "}·{" "}
           <a
             href="https://github.com/ArafathUIU"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/20 underline-offset-2 hover:text-white/40"
+            className="text-white/50 underline-offset-2 hover:text-white/80 transition-colors"
           >
             github.com/ArafathUIU
           </a>
