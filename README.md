@@ -29,162 +29,32 @@ An autonomous AI agent that takes a raw product idea and produces a complete pro
 ## Screenshots
 
 ### 1. Landing Page (`/`)
-macOS-style terminal typewriter showing the agent's internal monologue. Neural network 3D background. Headline + CTA appear while the terminal is still typing.
+macOS-style terminal typewriter showing the agent's internal monologue. Neural network 3D background. Headline + CTA fade in while the terminal is still typing.
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│ ● ● ●  blueprint.app                                            │
-├──────────────────────────────────────────────────────────────────┤
-│ > blueprint --init                                               │
-│   booting agent runtime...                                       │
-│   connecting to opencode go (deepseek-v4-pro)                    │
-│                                                                  │
-│ > blueprint --new "ai fitness coach"                             │
-│   [thinking] ok, let me analyze this product idea...             │
-│   [research] TAM estimated at $4.2B, growing at 28% CAGR        │
-│   [research] competitors: Freeletics, Nike Training, Future.co   │
-│   [stories] generating 14 stories across 3 epics...              │
-│   [wireframes] rendering 3 screens...                            │
-│   [prd] assembling document...                                   │
-│   [roadmap] phase 1 (wks 1-4): MVP — auth, AI engine, UI         │
-│                                                                  │
-│   pipeline complete. 5/5 agents ran successfully.                │
-│   total time: 4.2 minutes.                                       │
-│ > blueprint v1.0 — from idea to roadmap in one workflow.         │
-│                                                                  │
-│                       █ (fades in)                               │
-│              from idea to roadmap                                 │
-│                 in one workflow                                   │
-│                                                                  │
-│    RESEARCH. STORIES. WIREFRAMES. PRD. ROADMAP.                  │
-│                                                                  │
-│              [ Start a new blueprint ]                           │
-└──────────────────────────────────────────────────────────────────┘
-
-  How it works ──────────────────────────────────────────────────
-  ┌──────────┐   ┌─────────────┐   ┌──────────────┐
-  │ 01        │   │ 02           │   │ 03            │
-  │ Enter idea│   │ Agent runs   │   │ Export & exec │
-  │ Type any  │   │ research +   │   │ Markdown,     │
-  │ concept   │   │ stories +    │   │ PDF, copy to  │
-  │           │   │ wireframes   │   │ your docs     │
-  └──────────┘   └─────────────┘   └──────────────┘
-
-  output/sample-blueprint.md ───────────────────────────────────
-  # Market Research — 78/100 viability
-  ## TAM $4.2B growing at 28% CAGR
-  ## 5 competitors mapped: gaps in AI personalization
-  # User Stories — 14 generated, MoSCoW ranked
-  ## US-001 AI workout engine • cycles biometrics every 24h
-  # Roadmap — shipping in 3 phases
-  ## Phase 1 — Core (Weeks 1-4): AI planner, auth, workout UI
-```
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ArafathUIU/Blueprint/main/public/screenshots/landing.png" alt="Landing page with terminal typewriter" width="800" />
+</p>
 
 ### 2. Idea Input (`/new`)
 Dark form with live SSE-streamed pipeline progress. Terminal-style output panel shows agent thinking in natural language. Step indicators update in real-time.
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│   What product are you building?                                  │
-│                                                                  │
-│   [Project Name___________________]                              │
-│   ┌──────────────────────────────────────────────────────────┐  │
-│   │ A mobile app that uses AI to generate personalized...    │  │
-│   └──────────────────────────────────────────────────────────┘  │
-│   [ Generate Product Blueprint ]                                 │
-│                                                                  │
-│   ── During generation ──                                        │
-│   🔍 ● ── 📋 ○ ── 🎨 ○ ── 📄 ○ ── 🗺 ○                            │
-│                                                                  │
-│   ┌ ● ● ● blueprint.app/agent ────────────────────────────────┐ │
-│   │ ok, let me think about this...                              │ │
-│   │ the market for fitness apps is growing rapidly              │ │
-│   │ with 28% CAGR. analyzing top competitors —                  │ │
-│   │ Freeletics has strong brand but no AI...                    │ │
-│   │                                                             │ │
-│   │ now structuring user stories across 3 epics...              │ │
-│   │ US-001 AI workout engine P0 Must                             │ │
-│   │ US-004 equipment-aware planner P0 Must                       │ │
-│   │                                                             │ │
-│   │ █ (blinking cursor)                                          │ │
-│   └─────────────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ArafathUIU/Blueprint/main/public/screenshots/new-idea.png" alt="Idea input page with form" width="800" />
+</p>
 
 ### 3. Projects List (`/projects`)
-Grid of all blueprints with status badges, artifact dots, and inline delete.
+Grid of all blueprints with status badges, artifact completion dots, and inline delete buttons.
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  Your Blueprints                           [ New Blueprint ]      │
-│  3 projects                                                      │
-│                                                                  │
-│  ┌──────────────────────┐   ┌──────────────────────────┐        │
-│  │ Fitness AI App    ✓  │   │ SaaS Analytics Dashboard │        │
-│  │ [Complete]           │   │ [Draft]                  │        │
-│  │ A mobile app that... │   │ An analytics platform... │        │
-│  │ ──────────────────── │   │ ──────────────────────── │        │
-│  │ Jan 3, 2026          │   │ Jan 3, 2026              │        │
-│  │ ●R ●S ●W ●P ●D      │   │                          │        │
-│  └──────────────────────┘   └──────────────────────────┘        │
-│                                                                  │
-│  ┌───────────────────────────────┐                               │
-│  │ E-commerce Recommendation     │                               │
-│  │ [Draft]                       │                               │
-│  │ AI-powered product...         │                               │
-│  └───────────────────────────────┘                               │
-└──────────────────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ArafathUIU/Blueprint/main/public/screenshots/projects-list.png" alt="Projects list with status badges" width="800" />
+</p>
 
 ### 4. Project View (`/projects/[id]`)
-Colorful solid-card design with colored accent sections. Export + Delete buttons. Wireframe Chat allows natural language edits.
+Colorful solid-card design with colored accent sections. Export + Delete buttons. Wireframe Chat for natural language edits.
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  Fitness AI App  [Complete]  🗑️                                   │
-│  A mobile app that uses AI to generate...                        │
-│  [ 📋 Copy Markdown ]  [ ⬇ Download .md ]  [ 🖨 Print/PDF ]     │
-│                                                                  │
-│  Market Research ──────────────────────────────────────────────  │
-│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                           │
-│  │  TAM  │ │  SAM  │ │  SOM  │ │Score │                           │
-│  │ $4.2B │ │ $890M │ │ $45M  │ │78/100│                           │
-│  └──────┘ └──────┘ └──────┘ └──────┘                           │
-│                                                                  │
-│  Competitors                                       Our Edge       │
-│  Freeletics    · strong brand    · no AI      →  hyper-personal  │
-│  Nike Training · ecosystem       · generic    →  biometric int   │
-│  Future.co     · 1:1 coach       · expensive  →  $9.99/mo price  │
-│                                                                  │
-│  User Stories ─────────────────────────────────────────────────  │
-│  ┌ US-001  Onboarding  P0  Must ──────────────────────────┐     │
-│  │ █ Must  As a user, I want to input my biometrics...     │     │
-│  │  · AC: user uploads height, weight, goals               │     │
-│  └─────────────────────────────────────────────────────────┘     │
-│                                                                  │
-│  Wireframes ───────────────────────────────────────────────────  │
-│  ┌ Dashboard ───────────────────────────────────┐               │
-│  │ ┌──────────────────────────────────────────┐ │               │
-│  │ │ [Header bar] [CTA: Get Started]           │ │               │
-│  │ │ [Content cards with progress]             │ │               │
-│  │ └──────────────────────────────────────────┘ │               │
-│  │ > make the CTA button bigger and centered     │               │
-│  │ ✓ updated                                     │               │
-│  │ [ Edit ]___________________________________   │               │
-│  └──────────────────────────────────────────────┘               │
-│                                                                  │
-│  Development Roadmap ──────────────────────────────────────────  │
-│  ┌ 1  Phase 1 — MVP  [ Weeks 1-4 ] ─────────────────────────┐  │
-│  │  · User authentication system                             │  │
-│  │  · AI workout generation engine                           │  │
-│  │  · Biometric data input UI                                │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│  ┌ 2  Phase 2 — Growth  [ Weeks 5-8 ] ──────────────────────┐  │
-│  │  · Social sharing features                                │  │
-│  │  · Apple Health / Fitbit integration                      │  │
-│  └───────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ArafathUIU/Blueprint/main/public/screenshots/project-view.png" alt="Project view with research, stories, wireframes, PRD, and roadmap" width="800" />
+</p>
 
 ---
 
