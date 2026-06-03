@@ -68,6 +68,10 @@
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
+Blueprint follows a clean **four-layer architecture** that separates concerns from top to bottom. The user interacts with the **Browser** through three pages — landing, idea input, and project view — which communicate with the Next.js server through REST API calls. Inside the server, incoming requests hit the **API Route Layer** first, where each route validates inputs and delegates work to the appropriate agent. The **Agent Layer** contains five specialized AI agents, each with a distinct system prompt and structured output schema. All agents funnel through a single **AI Client** (`src/lib/ai.ts`) that abstracts away the provider details — currently OpenCode Go with the DeepSeek V4 Pro model. Results from each agent call are persisted to the **Data Store**, a file-based JSON store that requires zero database setup, making the entire system portable and easy to deploy. The store is intentionally simple: one JSON file per project, stored under `data/{uuid}.json`, with CRUD operations exposed through a small set of functions.
+
+The design principle behind this layering is **dependency inversion**: the API routes know about agents, but agents don't know about HTTP. Agents know about the AI client, but the AI client doesn't know about any specific agent. This means we can swap the LLM provider, change the storage backend, or add new agents without touching unrelated code.
+
 ---
 
 ## 2. Data Flow (End-to-End Pipeline)
@@ -133,6 +137,12 @@ User types idea at /new
 └──────────────────┘
 ```
 
+The pipeline is a **sequential, deterministic chain** of seven steps. It begins when the user submits a product idea on the `/new` page. The frontend first creates a project record with a `draft` status, then iterates through five agent endpoints in a fixed order. Each step is a blocking POST request — the UI waits for the current step to complete before triggering the next.
+
+This sequential design is intentional. The Story Generator needs the research summary to create persona-mapped stories. The Wireframe Generator needs finalized stories to know which screens to design. The PRD Agent needs research, stories, and wireframes to assemble a complete document. The Roadmap Agent needs stories to assign phases. **No step can run before its dependencies are ready.** Attempting parallelism here would produce lower-quality output because later agents would lack the context only prior agents can provide.
+
+After all five agents succeed, the project status becomes `complete` and the client redirects to the project view at `/projects/[id]`, which is a server-side rendered page that reads the project JSON from disk and renders all artifacts inline.
+
 ### Pipeline Orchestration
 
 The `pipeline.ts` file uses an async generator (`runFullPipeline`) that yields progress events:
@@ -145,11 +155,15 @@ for await (const event of runFullPipeline(project)) {
 }
 ```
 
+The async generator pattern was chosen over a simple async function because it enables **progressive yielding of state**. Each time an agent completes (or fails), the generator yields the updated project object back to the caller. This is the foundation for future SSE (Server-Sent Events) streaming — instead of waiting for all steps to finish, we can push progress events to the client in real time. For now, the `/api/projects/:id/pipeline` endpoint consumes all yielded events synchronously and returns the final project. The `/new` page takes a simpler approach: it calls each agent endpoint individually from the client, which gives us fine-grained progress updates without SSE infrastructure.
+
 Each step:
 1. Updates project status in store
 2. Calls the respective agent
 3. Saves the result to store
 4. On error: saves error to project, stops pipeline
+
+Error handling is **fail-fast per step**. If the Research Agent fails, the error is saved to the project's `error` field, the status is set to `error`, and the pipeline stops. No subsequent agents are invoked. The user can see which step failed in the UI and either retry that step individually or restart from the beginning. Partial results from successful steps are preserved on disk, so no work is lost.
 
 ---
 
@@ -171,6 +185,10 @@ export async function xAgent(input: InputType): Promise<OutputType> {
 }
 ```
 
+This pattern ensures every agent is **self-contained and testable in isolation**. Each agent file exports a single async function and a private system prompt constant. The system prompt is the agent's "personality" — it defines the agent's expertise, output format, constraints, and quality rules. The user prompt carries the dynamic context (product idea, research results, story list, etc.).
+
+The `runAgentStructured` helper in `ai.ts` handles the LLM call, response parsing, and JSON extraction. It wraps the Vercel AI SDK's `generateText` function and adds a **JSON extraction layer** that handles common LLM output patterns: code-fenced JSON blocks (` ```json ...``` `), bare JSON objects, and inline JSON buried in text. If parsing fails, it throws a descriptive error with a snippet of the raw response for debugging.
+
 ### Agent Details
 
 | Agent | File | Input | Output | Avg Time |
@@ -181,6 +199,16 @@ export async function xAgent(input: InputType): Promise<OutputType> {
 | **PRD** | `prd-gen.ts` | Idea + research + stories + wireframes | `PRD` (problem, goals, features, risks) | ~90s |
 | **Roadmap** | `roadmap-gen.ts` | Stories | `RoadmapPhase[]` (3-4 phases with deliverables) | ~60s |
 
+**Researcher Agent**: The entry point of the pipeline. It takes only the raw product idea and produces a comprehensive market analysis. Its system prompt instructs the LLM to estimate TAM/SAM/SOM with sources, identify 4-6 competitors with strengths and weaknesses, define 3-4 target personas, and assign a 0-100 viability score. The summary field provides a concise executive overview that downstream agents use as context.
+
+**Story Generator Agent**: Receives both the original idea and the research summary. This dual-input approach ensures stories are grounded in market reality — personas identified in research become the actors in user stories, and competitive gaps become feature opportunities. Output is 10-15 stories organized into 3-5 epics, each with priority (P0/P1/P2) and MoSCoW classification, plus 2-4 specific, testable acceptance criteria.
+
+**Wireframe Agent**: The most complex agent because it generates functional SVG markup. It receives only the top 8 stories (by priority) to keep token usage manageable. The system prompt enforces strict SVG constraints: viewBox 400×300, white background, only gray rects for UI blocks, one red CTA per screen, max 8 elements, no gradients or filters. Three wireframes are generated: typically a dashboard/home screen, a key feature screen, and a results/output screen.
+
+**PRD Agent**: The synthesis agent. It receives all prior artifacts — idea, research, stories, and wireframes — and assembles a complete PRD. Its system prompt covers problem statement, goals with metrics and targets, key features, technical architecture, success metrics baseline-to-target, risk matrix with likelihood/impact/mitigation, and dependencies. This is the most token-intensive agent because it carries the full context window.
+
+**Roadmap Agent**: The final agent. It receives only the user stories (not the full PRD) and generates a phased development plan. The system prompt enforces realistic timelines (4-6 weeks per phase), mandates that Phase 1 is always the MVP with P0/Must stories only, and requires all stories to be assigned to a phase. Output is 3-4 phases with specific deliverables per phase.
+
 ### Wireframe Optimization
 
 The wireframe agent was the slowest step (4+ minutes initially). Optimizations:
@@ -189,6 +217,8 @@ The wireframe agent was the slowest step (4+ minutes initially). Optimizations:
 - No gradients, filters, or complex paths
 - Only `rect`, `text`, `line` elements allowed
 - This cut generation time to ~60-90s
+
+The wireframe agent was initially the bottleneck. Full SVG generation with complex layouts, gradients, and detailed shapes took over 4 minutes per call because the LLM had to output hundreds of lines of SVG markup. Three optimizations brought this down to ~60 seconds: **(1)** Only the top 8 stories are passed as context — lower-priority stories don't drive UI design decisions. **(2)** A strict 8-element SVG cap was enforced in the system prompt — this prevents the LLM from over-designing with unnecessary decorative elements. **(3)** The system prompt explicitly bans gradients, filters, `<path>` elements, and complex shapes — only `<rect>`, `<text>`, and `<line>` are permitted. These constraints produce cleaner, more readable wireframes that resemble actual design mockups while dramatically reducing token output.
 
 ---
 
@@ -257,6 +287,12 @@ RoadmapPhase {
 }
 ```
 
+The data model is the **shared contract** between all layers of the application. It's defined in a single `types.ts` file and imported by agents, API routes, the store, and the frontend. The central entity is `Project`, which acts as an accumulator — it starts with just an `idea` and a `name`, and gradually fills with `research`, `stories`, `wireframes`, `prd`, and `roadmap` as each agent completes. The `status` field is a state machine that tracks exactly where in the pipeline the project sits, enabling the UI to show appropriate progress indicators. All date fields use ISO 8601 strings for JSON serialization compatibility.
+
+Each sub-entity carries **domain-specific metadata** that enables rich rendering. `UserStory` includes both a priority level (P0–P2) and a MoSCoW classification (Must/Should/Could/Won't) — these are independent dimensions that serve different audiences: priority for engineering planning, MoSCoW for stakeholder communication. `Wireframe` includes a `linkedStories` array that creates traceability between UI elements and the requirements they fulfill. `PRD` carries a full risk matrix with likelihood, impact, and mitigation columns — enough to generate a proper risk register. `RoadmapPhase` links back to story IDs so the project view can show which stories ship in each phase.
+
+The model uses **nullable fields** (`| null`) rather than optional fields (`?`) for agent outputs. This is intentional: a `null` value means "not yet generated", while an empty array `[]` would mean "generated but empty". These are semantically different states and the UI handles them differently.
+
 ---
 
 ## 5. Store Layer (src/lib/store.ts)
@@ -273,6 +309,12 @@ API:
   createProject(i,n)→ Project           (generates UUID, saves)
   updateProject(i,u)→ Project           (partial update, saves)
 ```
+
+The store is a **file-based JSON persistence layer** — intentionally minimal to keep the MVP dependency-free. Each project is stored as a single JSON file named `{uuid}.json` inside a `data/` directory at the project root. The directory is created automatically on first write. This design has several advantages: **(1)** Projects are human-readable — you can open any `.json` file in a text editor to inspect or manually fix a project. **(2)** No database server, Docker container, or connection string to configure. **(3)** Backup is trivial — copy the `data/` folder. **(4)** The entire store is portable across machines.
+
+The trade-off is scalability: file-based storage doesn't support concurrent writes, indexing, or querying. For a single-user or small-team MVP, this is acceptable. The `getProject` function does a simple file read, and `listProjects` reads all files in the directory and sorts them by `updatedAt` descending. The `updateProject` function does a read-modify-write cycle, merging the provided partial updates into the existing project and automatically bumping the `updatedAt` timestamp.
+
+The store is a **synchronous API** because Next.js route handlers run on the server and Node.js filesystem operations are fast enough for individual file reads. The `turbopackIgnore` comment on `process.cwd()` suppresses a Turbopack warning about filesystem operations in the build trace — this is expected for server-side code that reads from disk at runtime.
 
 ---
 
@@ -346,6 +388,14 @@ RootLayout (layout.tsx)
             └── Linked Story IDs
 ```
 
+The component tree reflects a **hybrid rendering strategy** that leverages Next.js App Router's strengths. The landing page (`/`) and project view (`/projects/[id]`) are **Server Components** — they fetch data on the server (from the file store) and render static HTML, resulting in fast page loads and SEO-friendly content. The idea input page (`/new`) is a **Client Component** because it needs interactive state: form inputs, progress tracking, and sequential API calls.
+
+The `RootLayout` is shared across all pages and provides: **(1)** The sticky header with the LEGO brick logo (light/dark variants based on system preference) and a "New Blueprint" CTA button. **(2)** A `TooltipProvider` wrapper required by shadcn/ui's tooltip component. **(3)** The Geist font family loaded via `next/font/google`.
+
+The **Idea Input Page** is the most interactive surface. It manages five pieces of state: the idea text, project name, loading flag, current pipeline step, completed steps set, agent message, and error. During generation, the form inputs are replaced by a rich progress panel showing a percentage bar, five color-coded step indicators (🔍 blue → 📋 amber → 🎨 purple → 📄 green → 🗺 cyan), a CSS-animated SVG spinner, and a cycling agent message that updates every 2.5 seconds to simulate the agent "thinking" — this dramatically reduces perceived wait time.
+
+The **Project View** is organized into collapsible sections, each mapped to an agent output. The Market Research section renders stat cards in a responsive 2-column grid, trends as badge chips, and competitors in a styled table. User Stories are rendered as cards with color-coded priority and MoSCoW badges — `Must` stories get a red-tinted border, `Should` stories amber, `Could` stories blue, and `Wont` stories gray. Wireframes use `dangerouslySetInnerHTML` to render the LLM-generated SVG directly — this is safe because we trust our own LLM output and there's no user-generated content in the SVG pipeline. The PRD section uses multiple tables (goals, features, metrics, risks) and the Roadmap section renders phase cards with a timeline badge and deliverables list.
+
 ---
 
 ## 7. Theme System
@@ -375,6 +425,12 @@ Fonts:
   Mono:  Geist Mono (variable)
 ```
 
+The theme is defined using **OKLCH color space** — the modern standard for perceptually uniform color manipulation. Unlike hex or RGB, OKLCH separates lightness (L), chroma (C), and hue (H), making it predictable when creating light/dark variants. The primary red (`oklch(0.55 0.24 27)`) maps to approximately `#DC2626` and is used consistently across badges, buttons, progress bars, and focus rings in both light and dark mode — the hue and chroma stay the same, only the lightness changes.
+
+The theme uses Tailwind CSS v4's `@theme inline` directive to register CSS custom properties as Tailwind design tokens. Every color variable (`--background`, `--foreground`, `--primary`, `--muted`, etc.) is registered so it can be used as a Tailwind utility class: `bg-background`, `text-foreground`, `border-primary`. The shadcn/ui base layer applies `@apply border-border outline-ring/50` globally, ensuring all elements inherit the correct border and focus ring colors automatically.
+
+Dark mode is triggered by the `.dark` class on any ancestor element — Next.js handles this through the `prefers-color-scheme` media query if no manual toggle is present. Both Geist Sans and Geist Mono are loaded as variable fonts via `next/font/google`, with CSS custom properties (`--font-sans`, `--font-geist-mono`) wired into the Tailwind `@theme inline` block.
+
 ---
 
 ## 8. Environment
@@ -383,6 +439,10 @@ Fonts:
 |----------|----------|---------|-------------|
 | `OPENCODE_GO_API_KEY` | Yes | — | API key from https://opencode.ai/go |
 | `DATA_DIR` | No | `./data` | Directory for project JSON files |
+
+The application requires exactly **one environment variable** to function: `OPENCODE_GO_API_KEY`. This is the API key for the OpenCode Go subscription ($10/month) that provides access to the DeepSeek V4 Pro model. Without this key, all agent calls will fail with a clear error message. The key is stored in `.env.local` (gitignored) and injected by Next.js at build time and runtime. An `.env.example` file is committed to the repo so new developers know what to configure.
+
+`DATA_DIR` is an optional override for the project storage location. It defaults to `./data/` relative to the project root. This can be changed to an absolute path for deployment scenarios where the project directory is read-only.
 
 ---
 
@@ -403,6 +463,14 @@ Fonts:
 | 2026-06-03 | Animated progress with cycling messages | Reduces user anxiety during long AI calls |
 | 2026-06-03 | `dangerouslySetInnerHTML` for wireframe SVG | Simple rendering; SVGs are LLM-generated (trusted) |
 
+Every architectural decision in this project was made with the **MVP-first principle**: build the simplest thing that works, defer complexity to later phases. The decision log captures the date and rationale for each choice so future contributors understand why things are the way they are.
+
+The most consequential decision was adopting **OpenCode Go over OpenAI's API**. At $10/month flat rate with generous limits (3,450 requests per 5 hours on DeepSeek V4 Pro), it makes the application financially viable for solo PMs. The per-token pricing of OpenAI would make a full pipeline (5 LLM calls) cost $0.50-$2.00 per run — prohibitive for frequent use. The trade-off is slightly slower response times and no access to proprietary models like GPT-4, but DeepSeek V4 Pro's quality is more than sufficient for structured PM outputs.
+
+The **file-based store** decision defers database complexity entirely. A typical project JSON file is 10-30KB, and even 100 projects would occupy ~3MB of disk space. The decision to defer authentication similarly keeps the codebase simple — there's one user, all projects are theirs, and there's no login screen, session management, or permission system to maintain.
+
+The **wireframe optimization** decisions represent the most impactful performance improvement. By limiting the agent to 8 SVG elements and banning complex shapes, we reduced the slowest pipeline step from 4+ minutes to ~60 seconds. This was possible because low-fidelity wireframes don't need gradients, shadows, or detailed paths — clean gray rectangles with clear labels are actually more useful to PMs than over-designed mockups.
+
 ---
 
 ## 10. Known Limitations & Future Work
@@ -416,3 +484,9 @@ Fonts:
 | No user isolation (all projects visible) | Add auth in Phase 3 with per-user project scoping |
 | Long pipeline time (~5-7 min total) | Explore parallel agents where possible; add progress streaming |
 | Print export doesn't include SVGs well | Add `html2canvas` for better PDF export |
+
+These limitations are **acknowledged trade-offs**, not bugs. Each has a clear mitigation plan that aligns with the phased roadmap. The most user-impacting limitation is the total pipeline time of 5-7 minutes — this is inherent to making five sequential LLM calls. The short-term fix is the animated progress UI (already implemented), which makes the wait feel shorter. The medium-term fix is SSE streaming (Phase 2), which will push per-token progress to the client. The long-term fix is exploring whether any agents can run in parallel — for example, wireframes and roadmap could theoretically run concurrently since they share only stories as input.
+
+The SVG validation limitation is a quality-of-life issue: occasionally the LLM generates malformed SVG that renders as blank or broken in the browser. The planned fix is a lightweight SVG validation layer that checks for required attributes and falls back to a description-only card if the SVG is invalid.
+
+File store scalability is a known constraint, but it's premature optimization for the current stage. The migration to SQLite (Phase 3) is straightforward because the store API (`listProjects`, `getProject`, `saveProject`, etc.) abstracts away the storage implementation — only `store.ts` needs to change, not the agents or routes that call it.
