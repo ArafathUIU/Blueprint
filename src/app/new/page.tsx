@@ -252,10 +252,10 @@ export default function NewProjectPage() {
         {!loading && (
           <>
             <div className="flex flex-col gap-2 text-center">
-              <h1 className="text-3xl font-bold tracking-tight">
+              <h1 className="text-3xl font-bold tracking-tight text-white">
                 What product are you building?
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-white/40">
                 Describe your idea. Blueprint will generate research, stories,
                 wireframes, a PRD, and a roadmap.
               </p>
@@ -263,23 +263,24 @@ export default function NewProjectPage() {
 
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="name">Project Name (optional)</Label>
+                <Label htmlFor="name" className="text-white/50">Project Name (optional)</Label>
                 <Input
                   id="name"
                   placeholder="e.g. Fitness AI App"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="border-white/10 bg-white/[0.04] text-white placeholder:text-white/20"
                 />
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="idea">Product Idea</Label>
+                <Label htmlFor="idea" className="text-white/50">Product Idea</Label>
                 <Textarea
                   id="idea"
                   placeholder="A mobile app that uses AI to generate personalized workout plans based on user biometrics and available equipment..."
                   value={idea}
                   onChange={(e) => setIdea(e.target.value)}
-                  className="min-h-36 resize-y"
+                  className="min-h-36 resize-y border-white/10 bg-white/[0.04] text-white placeholder:text-white/20"
                 />
               </div>
 
