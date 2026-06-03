@@ -128,13 +128,13 @@ export default function Home() {
           }`}
         >
           <h1 className="font-sans text-[28px] font-bold tracking-tight text-white sm:text-5xl">
-            from idea to roadmap
+            From Idea to Roadmap
           </h1>
           <h2 className="mt-2 font-sans text-[28px] font-bold tracking-tight text-red-500 sm:text-5xl">
-            in one workflow
+            in One Workflow
           </h2>
           <p className="mx-auto mt-4 max-w-md text-lg leading-relaxed tracking-wider text-white/60 sm:text-xl">
-            RESEARCH. STORIES. WIREFRAMES. PRD. ROADMAP.
+            Research. Stories. Wireframes. PRD. Roadmap.
           </p>
           <p className="mx-auto mt-1 max-w-md text-sm font-normal leading-relaxed text-white/25">
             An autonomous AI agent that collapses 6 tools into 1.

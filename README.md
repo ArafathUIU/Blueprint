@@ -1,136 +1,189 @@
 <p align="center">
-  <img src="public/logo-vertical.svg" alt="Blueprint" width="200" />
+  <h1 align="center">
+    <span style="color: #DC2626;">blueprint</span>
+  </h1>
+  <p align="center">from idea to roadmap. in one workflow.</p>
 </p>
+
+---
 
 # Blueprint — AI Product Manager Agent
 
-An autonomous AI agent that takes a raw product idea and produces a complete product package: market research, competitive analysis, user stories, wireframes, PRDs, and development roadmap — all in one continuous workflow.
+An autonomous AI agent that takes a raw product idea and produces a complete product package: market research, user stories, wireframes, a PRD, and a development roadmap — all in one continuous SSE-streamed workflow.
 
 ---
 
 ## Table of Contents
 
-- [Overview](#overview)
 - [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [API Reference](#api-reference)
 - [Project Structure](#project-structure)
-- [Development Approach](#development-approach)
+- [Features Deep-Dive](#features-deep-dive)
 - [Roadmap](#roadmap)
-
----
-
-## Overview
-
-**Blueprint** solves the #1 pain point for product managers: tool fragmentation. PMs currently use 6–8 tools across research, documentation, design, and roadmapping. Blueprint collapses this into a single AI-powered workflow:
-
-```
-Idea → Market Research → User Stories → Wireframes → PRD → Roadmap
-```
-
-### Key Features
-
-- **Autonomous Market Research** — TAM/SAM/SOM estimates, competitor analysis, persona mapping, viability scoring
-- **User Story Generator** — 10–15 structured stories with acceptance criteria, organized by epics, MoSCoW-prioritized
-- **Wireframe Generator** — SVG wireframes generated from user stories with annotations and story traceability
-- **PRD Builder** — Complete product requirements document auto-assembled from all prior artifacts
-- **Development Roadmap** — Phased sprint plan with deliverables, timelines, and story assignments
-- **Export** — Copy Markdown, download `.md`, or Print/Save as PDF
 
 ---
 
 ## Screenshots
 
-### Landing Page
-The hero section with logo, tagline, and CTA. Recent blueprints shown in a card grid below.
+### 1. Landing Page (`/`)
+macOS-style terminal typewriter showing the agent's internal monologue. Neural network 3D background. Headline + CTA appear while the terminal is still typing.
 
 ```
-┌─────────────────────────────────────────────────┐
-│                   [LEGO Icon]                    │
-│                    blueprint                     │
-│              ━━━━━━━━━━━━                        │
-│                                                  │
-│   An autonomous AI agent that takes a raw        │
-│   product idea and produces a complete...        │
-│                                                  │
-│          [ Start a new product blueprint ]       │
-│                                                  │
-│   ┌──────────┐  ┌──────────┐  ┌──────────┐     │
-│   │ Fitness  │  │ SaaS     │  │ E-com    │     │
-│   │ AI       │  │ Dashboard│  │ Recs     │     │
-│   │ Complete │  │ Draft    │  │ Stories  │     │
-│   └──────────┘  └──────────┘  └──────────┘     │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│ ● ● ●  blueprint.app                                            │
+├──────────────────────────────────────────────────────────────────┤
+│ > blueprint --init                                               │
+│   booting agent runtime...                                       │
+│   connecting to opencode go (deepseek-v4-pro)                    │
+│                                                                  │
+│ > blueprint --new "ai fitness coach"                             │
+│   [thinking] ok, let me analyze this product idea...             │
+│   [research] TAM estimated at $4.2B, growing at 28% CAGR        │
+│   [research] competitors: Freeletics, Nike Training, Future.co   │
+│   [stories] generating 14 stories across 3 epics...              │
+│   [wireframes] rendering 3 screens...                            │
+│   [prd] assembling document...                                   │
+│   [roadmap] phase 1 (wks 1-4): MVP — auth, AI engine, UI         │
+│                                                                  │
+│   pipeline complete. 5/5 agents ran successfully.                │
+│   total time: 4.2 minutes.                                       │
+│ > blueprint v1.0 — from idea to roadmap in one workflow.         │
+│                                                                  │
+│                       █ (fades in)                               │
+│              from idea to roadmap                                 │
+│                 in one workflow                                   │
+│                                                                  │
+│    RESEARCH. STORIES. WIREFRAMES. PRD. ROADMAP.                  │
+│                                                                  │
+│              [ Start a new blueprint ]                           │
+└──────────────────────────────────────────────────────────────────┘
+
+  How it works ──────────────────────────────────────────────────
+  ┌──────────┐   ┌─────────────┐   ┌──────────────┐
+  │ 01        │   │ 02           │   │ 03            │
+  │ Enter idea│   │ Agent runs   │   │ Export & exec │
+  │ Type any  │   │ research +   │   │ Markdown,     │
+  │ concept   │   │ stories +    │   │ PDF, copy to  │
+  │           │   │ wireframes   │   │ your docs     │
+  └──────────┘   └─────────────┘   └──────────────┘
+
+  output/sample-blueprint.md ───────────────────────────────────
+  # Market Research — 78/100 viability
+  ## TAM $4.2B growing at 28% CAGR
+  ## 5 competitors mapped: gaps in AI personalization
+  # User Stories — 14 generated, MoSCoW ranked
+  ## US-001 AI workout engine • cycles biometrics every 24h
+  # Roadmap — shipping in 3 phases
+  ## Phase 1 — Core (Weeks 1-4): AI planner, auth, workout UI
 ```
 
-### Idea Input Dashboard (`/new`)
-
-Product idea input with live pipeline progress: spinner, progress bar, step indicators with agent "thinking" messages.
-
-```
-┌─────────────────────────────────────────────────┐
-│   What product are you building?                │
-│                                                  │
-│   [Project Name (optional)_____________________] │
-│                                                  │
-│   ┌─────────────────────────────────────────┐   │
-│   │ A mobile app that uses AI to generate   │   │
-│   │ personalized workout plans based on     │   │
-│   │ user biometrics and available equip...  │   │
-│   └─────────────────────────────────────────┘   │
-│                                                  │
-│   [████████████████░░░░░░░░░░░░░░░]  60%        │
-│   3 of 5 steps complete                         │
-│                                                  │
-│   🔍 ✓ ── 📋 ✓ ── 🎨 ● ── 📄 ○ ── 🗺 ○       │
-│   Research  Stories  Wireframes  PRD  Roadmap   │
-│         ↻ Wireframes  Designing screen layouts   │
-└─────────────────────────────────────────────────┘
-```
-
-### Project View (`/projects/[id]`)
-
-Full results displayed in organized sections: research tables, priority-coded user stories with ACs, wireframe SVGs, PRD tables, roadmap cards.
+### 2. Idea Input (`/new`)
+Dark form with live SSE-streamed pipeline progress. Terminal-style output panel shows agent thinking in natural language. Step indicators update in real-time.
 
 ```
-┌─────────────────────────────────────────────────┐
-│   Fitness AI App  [Complete]                    │
-│   A mobile app that uses AI to generate...      │
-│   [Copy Markdown] [Download .md] [Print/PDF]    │
-│                                                  │
-│   ── Market Research ──                         │
-│   ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐         │
-│   │ TAM  │ │ SAM  │ │ SOM  │ │Score │         │
-│   │$4.2B │ │$890M │ │$45M  │ │78/100│         │
-│   └──────┘ └──────┘ └──────┘ └──────┘         │
-│   ┌─────────────────────────────────────────┐   │
-│   │ Company   │ Strength │ Weakness │ Edge  │   │
-│   │ Freeletics│ Brand    │ Generic  │ AI    │   │
-│   └─────────────────────────────────────────┘   │
-│                                                  │
-│   ── User Stories ──                            │
-│   ┌ US-001 [Onboarding] P0 Must ────────────┐  │
-│   │ As a user, I want to input my...         │  │
-│   │ • AC 1  • AC 2  • AC 3                  │  │
-│   └──────────────────────────────────────────┘  │
-│                                                  │
-│   ── Wireframes ──                              │
-│   ┌──────────────┐ ┌──────────────┐            │
-│   │ [SVG Mockup] │ │ [SVG Mockup] │            │
-│   └──────────────┘ └──────────────┘            │
-│                                                  │
-│   ── PRD ──                                     │
-│   │ Goal        │ Metric     │ Target  │         │
-│   │ Time to PRD │ Minutes    │ < 2 hrs │         │
-│                                                  │
-│   ── Roadmap ──                                 │
-│   ┌ MVP — Core Features  [Weeks 1-4] ──────┐   │
-│   │ • User auth     • Workout engine        │   │
-│   │ • Biometric input • Basic AI plans      │   │
-│   └──────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│   What product are you building?                                  │
+│                                                                  │
+│   [Project Name___________________]                              │
+│   ┌──────────────────────────────────────────────────────────┐  │
+│   │ A mobile app that uses AI to generate personalized...    │  │
+│   └──────────────────────────────────────────────────────────┘  │
+│   [ Generate Product Blueprint ]                                 │
+│                                                                  │
+│   ── During generation ──                                        │
+│   🔍 ● ── 📋 ○ ── 🎨 ○ ── 📄 ○ ── 🗺 ○                            │
+│                                                                  │
+│   ┌ ● ● ● blueprint.app/agent ────────────────────────────────┐ │
+│   │ ok, let me think about this...                              │ │
+│   │ the market for fitness apps is growing rapidly              │ │
+│   │ with 28% CAGR. analyzing top competitors —                  │ │
+│   │ Freeletics has strong brand but no AI...                    │ │
+│   │                                                             │ │
+│   │ now structuring user stories across 3 epics...              │ │
+│   │ US-001 AI workout engine P0 Must                             │ │
+│   │ US-004 equipment-aware planner P0 Must                       │ │
+│   │                                                             │ │
+│   │ █ (blinking cursor)                                          │ │
+│   └─────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### 3. Projects List (`/projects`)
+Grid of all blueprints with status badges, artifact dots, and inline delete.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Your Blueprints                           [ New Blueprint ]      │
+│  3 projects                                                      │
+│                                                                  │
+│  ┌──────────────────────┐   ┌──────────────────────────┐        │
+│  │ Fitness AI App    ✓  │   │ SaaS Analytics Dashboard │        │
+│  │ [Complete]           │   │ [Draft]                  │        │
+│  │ A mobile app that... │   │ An analytics platform... │        │
+│  │ ──────────────────── │   │ ──────────────────────── │        │
+│  │ Jan 3, 2026          │   │ Jan 3, 2026              │        │
+│  │ ●R ●S ●W ●P ●D      │   │                          │        │
+│  └──────────────────────┘   └──────────────────────────┘        │
+│                                                                  │
+│  ┌───────────────────────────────┐                               │
+│  │ E-commerce Recommendation     │                               │
+│  │ [Draft]                       │                               │
+│  │ AI-powered product...         │                               │
+│  └───────────────────────────────┘                               │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### 4. Project View (`/projects/[id]`)
+Colorful solid-card design with colored accent sections. Export + Delete buttons. Wireframe Chat allows natural language edits.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Fitness AI App  [Complete]  🗑️                                   │
+│  A mobile app that uses AI to generate...                        │
+│  [ 📋 Copy Markdown ]  [ ⬇ Download .md ]  [ 🖨 Print/PDF ]     │
+│                                                                  │
+│  Market Research ──────────────────────────────────────────────  │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                           │
+│  │  TAM  │ │  SAM  │ │  SOM  │ │Score │                           │
+│  │ $4.2B │ │ $890M │ │ $45M  │ │78/100│                           │
+│  └──────┘ └──────┘ └──────┘ └──────┘                           │
+│                                                                  │
+│  Competitors                                       Our Edge       │
+│  Freeletics    · strong brand    · no AI      →  hyper-personal  │
+│  Nike Training · ecosystem       · generic    →  biometric int   │
+│  Future.co     · 1:1 coach       · expensive  →  $9.99/mo price  │
+│                                                                  │
+│  User Stories ─────────────────────────────────────────────────  │
+│  ┌ US-001  Onboarding  P0  Must ──────────────────────────┐     │
+│  │ █ Must  As a user, I want to input my biometrics...     │     │
+│  │  · AC: user uploads height, weight, goals               │     │
+│  └─────────────────────────────────────────────────────────┘     │
+│                                                                  │
+│  Wireframes ───────────────────────────────────────────────────  │
+│  ┌ Dashboard ───────────────────────────────────┐               │
+│  │ ┌──────────────────────────────────────────┐ │               │
+│  │ │ [Header bar] [CTA: Get Started]           │ │               │
+│  │ │ [Content cards with progress]             │ │               │
+│  │ └──────────────────────────────────────────┘ │               │
+│  │ > make the CTA button bigger and centered     │               │
+│  │ ✓ updated                                     │               │
+│  │ [ Edit ]___________________________________   │               │
+│  └──────────────────────────────────────────────┘               │
+│                                                                  │
+│  Development Roadmap ──────────────────────────────────────────  │
+│  ┌ 1  Phase 1 — MVP  [ Weeks 1-4 ] ─────────────────────────┐  │
+│  │  · User authentication system                             │  │
+│  │  · AI workout generation engine                           │  │
+│  │  · Biometric data input UI                                │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│  ┌ 2  Phase 2 — Growth  [ Weeks 5-8 ] ──────────────────────┐  │
+│  │  · Social sharing features                                │  │
+│  │  · Apple Health / Fitbit integration                      │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -138,51 +191,103 @@ Full results displayed in organized sections: research tables, priority-coded us
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────┐
-│                   UI Layer                        │
-│          Next.js + Tailwind v4 + shadcn/ui       │
-│  ┌────────┐  ┌──────────┐  ┌─────────────────┐  │
-│  │ /      │  │ /new     │  │ /projects/[id]  │  │
-│  │ Landing│  │ Input    │  │ Project View    │  │
-│  └────────┘  └──────────┘  └─────────────────┘  │
-├──────────────────────────────────────────────────┤
-│               Agent Orchestration                │
-│         5 Specialized AI Agents                  │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐        │
-│  │Researcher│ │ StoryGen │ │Wireframe │        │
-│  └──────────┘ └──────────┘ └──────────┘        │
-│  ┌──────────┐ ┌──────────┐                     │
-│  │ PRD Gen  │ │ Roadmap  │                     │
-│  └──────────┘ └──────────┘                     │
-├──────────────────────────────────────────────────┤
-│                AI Provider                       │
-│         OpenCode Go (deepseek-v4-pro)            │
-│         https://opencode.ai/zen/go/v1            │
-├──────────────────────────────────────────────────┤
-│              Data Layer                          │
-│       File-based JSON store (data/*.json)       │
-└──────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                          BROWSER (Client)                             │
+│                                                                      │
+│  ┌─────────┐   ┌─────────┐   ┌──────────┐   ┌───────────────────┐  │
+│  │ /       │   │ /new    │   │ /projects │   │ /projects/[id]    │  │
+│  │ Terminal│   │ SSE     │   │ List View │   │ Project + Chat    │  │
+│  │ Hero    │   │ Stream  │   │ + Delete  │   │ + Export + Edit   │  │
+│  └────┬────┘   └────┬────┘   └────┬─────┘   └────────┬──────────┘  │
+│       │             │             │                   │              │
+└───────┼─────────────┼─────────────┼───────────────────┼──────────────┘
+        │             │             │                   │
+        ▼             ▼             ▼                   ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                       NEXT.JS SERVER (Port 3000)                      │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    15 API ROUTES (ƒ dynamic)                    │ │
+│  │                                                                │ │
+│  │  GET/POST   /api/projects                                       │ │
+│  │  GET/DELETE /api/projects/[id]                                  │ │
+│  │  POST  /api/projects/[id]/research /stories /wireframes        │ │
+│  │  POST  /api/projects/[id]/prd /roadmap                          │ │
+│  │  POST  /api/projects/[id]/pipeline        (blocking)            │ │
+│  │  POST  /api/projects/[id]/pipeline/stream (SSE, text/event-stream)│
+│  │  POST  /api/projects/[id]/wireframes/[wfId]/edit                │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                     AGENT LAYER (src/lib/agents/)               │ │
+│  │                                                                │ │
+│  │  researcher.ts      story-gen.ts       wireframe-gen.ts        │ │
+│  │  prd-gen.ts         roadmap-gen.ts     wireframe-editor.ts     │ │
+│  │  pipeline.ts (blocking)  pipeline-stream.ts (SSE streaming)    │ │
+│  └────────────────────────────┬───────────────────────────────────┘ │
+│                               │                                      │
+│  ┌────────────────────────────▼───────────────────────────────────┐ │
+│  │                    AI CLIENT (src/lib/ai.ts)                    │ │
+│  │                                                                │ │
+│  │  runAgent() → blocking              streamAgent() → streaming  │ │
+│  │  runAgentStructured() → JSON parse   streamAgentStructured()    │ │
+│  │                                                                │ │
+│  │  Provider:  @ai-sdk/openai-compatible                          │ │
+│  │  Base URL:  https://opencode.ai/zen/go/v1/chat/completions     │ │
+│  │  Model:     deepseek-v4-pro                                     │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    DATA STORE (src/lib/store.ts)                │ │
+│  │                                                                │ │
+│  │  File-based JSON · data/{uuid}.json                            │ │
+│  │  CRUD + deleteProject()                                        │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-### Pipeline Flow
+### Pipeline Flow (Streaming)
 
 ```
-User Input → POST /api/projects → Project Created
-                                      ↓
-           POST /api/projects/:id/research   → Agent: researcher.ts
-                                      ↓
-           POST /api/projects/:id/stories    → Agent: story-gen.ts
-                                      ↓
-           POST /api/projects/:id/wireframes → Agent: wireframe-gen.ts
-                                      ↓
-           POST /api/projects/:id/prd        → Agent: prd-gen.ts
-                                      ↓
-           POST /api/projects/:id/roadmap    → Agent: roadmap-gen.ts
-                                      ↓
-                               Project Complete
+User types idea at /new
+        │
+        ▼
+┌──────────────────┐
+│ 1. POST /api/projects     │  Create project (draft)
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│ 2. POST .../stream        │  SSE connection opened
+│    (text/event-stream)    │  Single persistent connection
+└────────┬─────────┘
+         │
+         ▼
+   ┌─ SSE Events ──────────────────────────────┐
+   │                                            │
+   │  step_start: "research"                   │
+   │  token: "ok, let me analyze..."           │
+   │  token: "the market for fitness..."       │
+   │  ...continuous streaming...               │
+   │  step_end: "research"                     │
+   │                                            │
+   │  step_start: "stories"                    │
+   │  token: "structuring user stories..."     │
+   │  ...                                      │
+   │  step_end: "stories"                      │
+   │                                            │
+   │  step_start_spinner: "wireframes"         │  ← No token streaming
+   │  step_end_spinner: "wireframes"           │     (SVG tokens meaningless)
+   │                                            │
+   │  step_start: "prd"                        │
+   │  token: "assembling the PRD..."           │
+   │  ...                                      │
+   │  done: { projectId: "..." }               │
+   └────────────────────────────────────────────┘
+         │
+         ▼
+    Redirect to /projects/[id]
 ```
-
-Each step can be triggered individually via its own API endpoint, or all at once via `/api/projects/:id/pipeline`.
 
 ---
 
@@ -192,12 +297,14 @@ Each step can be triggered individually via its own API endpoint, or all at once
 |-------|-----------|
 | **Framework** | Next.js 16 (App Router) |
 | **Language** | TypeScript |
-| **Styling** | Tailwind CSS v4 |
-| **Components** | shadcn/ui (base-nova style) |
+| **Styling** | Tailwind CSS v4 + shadcn/ui |
+| **3D Graphics** | Three.js + @react-three/fiber |
 | **AI SDK** | Vercel AI SDK + `@ai-sdk/openai-compatible` |
-| **LLM** | DeepSeek V4 Pro via OpenCode Go |
+| **LLM** | DeepSeek V4 Pro via OpenCode Go ($10/mo) |
+| **Streaming** | SSE (Server-Sent Events) + `streamText()` |
 | **Icons** | lucide-react |
-| **Storage** | File-based JSON store |
+| **Storage** | File-based JSON store (`data/*.json`) |
+| **Fonts** | System font stack (Sans + Mono) |
 
 ---
 
@@ -206,73 +313,57 @@ Each step can be triggered individually via its own API endpoint, or all at once
 ### Prerequisites
 
 - Node.js 18+
-- An OpenCode Go API key ([subscribe here](https://opencode.ai/go))
+- An OpenCode Go API key ([subscribe here](https://opencode.ai/go) — $10/mo)
 
 ### Setup
 
 ```bash
-# Clone the repo
 git clone https://github.com/ArafathUIU/Blueprint.git
 cd Blueprint
-
-# Install dependencies
 npm install
-
-# Set your API key
 cp .env.example .env.local
-# Edit .env.local: OPENCODE_GO_API_KEY=sk-...
-
-# Start dev server
+# Edit .env.local:  OPENCODE_GO_API_KEY=sk-...
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-### Build for production
-
 ```bash
-npm run build
-npm start
+# Production build
+npm run build && npm start
 ```
 
 ---
 
 ## API Reference
 
-### Projects
-
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/projects` | List all projects |
-| `POST` | `/api/projects` | Create a new project `{ idea, name }` |
-| `GET` | `/api/projects/:id` | Get a single project |
-
-### Agents (step-by-step)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/projects/:id/research` | Run market research agent |
+| `POST` | `/api/projects` | Create project `{ idea, name }` |
+| `GET` | `/api/projects/:id` | Get project |
+| `DELETE` | `/api/projects/:id` | Delete project |
+| `POST` | `/api/projects/:id/research` | Run research agent |
 | `POST` | `/api/projects/:id/stories` | Generate user stories |
 | `POST` | `/api/projects/:id/wireframes` | Generate wireframes |
+| `POST` | `/api/projects/:id/wireframes/:wfId/edit` | Edit wireframe `{ command }` |
 | `POST` | `/api/projects/:id/prd` | Assemble PRD |
 | `POST` | `/api/projects/:id/roadmap` | Generate roadmap |
-
-### Full Pipeline
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/projects/:id/pipeline` | Run all 5 agents sequentially |
-
-### Example
+| `POST` | `/api/projects/:id/pipeline` | Run all 5 agents (blocking) |
+| `POST` | `/api/projects/:id/pipeline/stream` | Run pipeline via SSE |
 
 ```bash
-# Create a project
-curl -X POST http://localhost:3000/api/projects \
+# Quick start
+curl -X POST localhost:3000/api/projects \
   -H "Content-Type: application/json" \
-  -d '{"idea": "A fitness app powered by AI"}'
+  -d '{"idea": "AI fitness coach app"}'
 
-# Run the full pipeline
-curl -X POST http://localhost:3000/api/projects/PROJECT_ID/pipeline
+curl -X POST localhost:3000/api/projects/PROJECT_ID/pipeline/stream
+
+# Edit wireframe
+curl -X POST localhost:3000/api/projects/PROJECT_ID/wireframes/WF-001/edit \
+  -H "Content-Type: application/json" \
+  -d '{"command": "make the CTA button red and centered"}'
 ```
 
 ---
@@ -282,124 +373,124 @@ curl -X POST http://localhost:3000/api/projects/PROJECT_ID/pipeline
 ```
 src/
 ├── app/
-│   ├── layout.tsx              # Root layout + header + TooltipProvider
-│   ├── page.tsx                # Landing page + recent projects
-│   ├── globals.css             # Red/black/white theme + shadcn base
+│   ├── layout.tsx                   # Root layout, nav, neural bg
+│   ├── page.tsx                     # Terminal typewriter landing
+│   ├── globals.css                  # Theme + shadcn base
 │   ├── new/
-│   │   └── page.tsx            # Idea input dashboard
+│   │   └── page.tsx                 # Idea input + SSE live stream
 │   ├── projects/
+│   │   ├── page.tsx                 # All projects list (+ delete)
 │   │   └── [id]/
-│   │       └── page.tsx        # Project view with all artifacts
-│   └── api/
-│       └── projects/
-│           ├── route.ts        # GET list / POST create
-│           └── [id]/
-│               ├── route.ts    # GET single project
-│               ├── research/
-│               ├── stories/
-│               ├── wireframes/
-│               ├── prd/
-│               ├── roadmap/
-│               └── pipeline/   # Full pipeline orchestrator
+│   │       └── page.tsx             # Project view (colorful cards)
+│   └── api/projects/
+│       ├── route.ts                 # GET list, POST create
+│       └── [id]/
+│           ├── route.ts             # GET, DELETE
+│           ├── research/route.ts
+│           ├── stories/route.ts
+│           ├── wireframes/route.ts
+│           ├── wireframes/[wfId]/edit/route.ts
+│           ├── prd/route.ts
+│           ├── roadmap/route.ts
+│           ├── pipeline/route.ts
+│           └── pipeline/stream/route.ts  # SSE endpoint
 ├── components/
-│   ├── ui/                     # shadcn/ui components
-│   ├── pipeline-progress.tsx   # 5-step progress indicator
-│   └── export-buttons.tsx      # Markdown/Print export
+│   ├── ui/                          # shadcn/ui primitives
+│   ├── neural-network.tsx           # Obsidian node graph (Three.js)
+│   ├── neural-network-canvas.tsx    # Canvas wrapper
+│   ├── neural-background.tsx        # Global bg component
+│   ├── terminal-typewriter.tsx      # macOS terminal animation
+│   ├── live-stream-panel.tsx        # Agent output terminal
+│   ├── export-buttons.tsx           # Copy/Download/Print
+│   ├── delete-button.tsx            # Confirm-delete UI
+│   ├── wireframe-chat.tsx           # Chat input for wireframe edits
+│   └── wireframe-with-chat.tsx      # Wireframe card + chat
 ├── lib/
-│   ├── ai.ts                   # OpenCode Go client
-│   ├── types.ts                # Full data model
-│   ├── store.ts                # File-based project persistence
+│   ├── ai.ts                        # OpenCode Go client (+ streaming)
+│   ├── types.ts                     # Data model (Project, MarketResearch, ...)
+│   ├── store.ts                     # File-based CRUD + delete
 │   └── agents/
-│       ├── index.ts            # Barrel export
-│       ├── researcher.ts       # Market research agent
-│       ├── story-gen.ts        # User story generator
-│       ├── wireframe-gen.ts    # SVG wireframe generator
-│       ├── prd-gen.ts          # PRD assembler
-│       ├── roadmap-gen.ts      # Roadmap generator
-│       └── pipeline.ts         # End-to-end orchestrator
+│       ├── researcher.ts            # Market research agent
+│       ├── story-gen.ts             # User story generator
+│       ├── wireframe-gen.ts         # SVG wireframe generator
+│       ├── wireframe-editor.ts      # Wireframe chat editor
+│       ├── prd-gen.ts              # PRD assembler
+│       ├── roadmap-gen.ts          # Roadmap generator
+│       ├── pipeline.ts             # Blocking orchestrator
+│       └── pipeline-stream.ts      # SSE streaming orchestrator
 └── public/
-    ├── icon.svg                # LEGO brick favicon
-    ├── logo-horizontal.svg     # Wordmark logo (light)
-    ├── logo-vertical.svg       # Stacked logo
-    └── logo-dark.svg           # Wordmark logo (dark)
+    ├── icon.svg                     # LEGO brick favicon
+    ├── logo-horizontal.svg
+    ├── logo-vertical.svg
+    └── logo-dark.svg
 ```
 
 ---
 
-## Development Approach
+## Features Deep-Dive
 
-### Phase 0: Project Setup
-- Initialized Next.js 16 with TypeScript and Tailwind CSS v4
-- Integrated shadcn/ui with red/black/white theme using OKLCH color space
-- Created custom LEGO brick SVG logo — red brick body with 3 studs, representing building blocks of product development
-- Set up `TooltipProvider` wrapper in root layout
+### SSE Streaming Pipeline
+The pipeline streams agent output in real-time via Server-Sent Events. Tokens from the LLM are pushed to the browser as they're generated — users see the agent "thinking out loud" in natural language, exactly like a human PM would analyze a product idea.
 
-### Phase 0: Backend (Agents + API)
-- **AI Client**: Connected to OpenCode Go (`deepseek-v4-pro`) via `@ai-sdk/openai-compatible`
-- **Agent Architecture**: Each agent is a standalone function with structured system prompts and JSON output parsing
-- **Store**: File-based JSON persistence (`data/*.json`) with CRUD operations — no database needed for MVP
-- **Pipeline**: Sequential orchestrator that runs all 5 agents and catches errors per step
+### Neural Network Background
+An Obsidian-style 3D node graph rendered with Three.js. ~120 nodes with glow halos, visible connections, and animated white pulses traveling along edges. Graph brightness and pulse speed increase during agent activity.
 
-### Phase 1: Frontend (Dashboard + Project View)
-- **Progress UX**: Animated spinner, color-coded step icons (🔍📋🎨📄🗺), cycling agent messages ("Designing screen layouts..."), percentage progress bar
-- **Wireframe optimization**: Agent limited to 8-element SVGs with strict simple-shapes-only rules — cuts generation time significantly
-- **Export**: Client-side Markdown generation from project data; Download `.md` and Print/Save PDF via browser print dialog
-- **Landing page**: Shows recent projects in a responsive card grid with status badges
+### Natural Language Agent Thinking
+Prompt engineering instructs the LLM to think step-by-step out loud before producing structured JSON. The thinking text streams live, while JSON is parsed at the end of each step. Wireframe generation uses a spinner (SVG tokens are meaningless to stream).
 
-### Design Decisions
-| Decision | Rationale |
-|----------|-----------|
-| No auth (deferred) | Keep MVP lean; `localStorage` + file store sufficient for solo PMs |
-| File-based storage | Zero-setup persistence; no database dependency for early stage |
-| Sequential pipeline (not parallel) | Each agent depends on prior output; sequential ensures data integrity |
-| Client-side export | No server load for doc generation; instant Markdown/print |
-| Minimal wireframe SVGs | Cuts LLM response time from 4+ min to ~60s without sacrificing clarity |
+### Wireframe Chat
+Edit generated wireframes with natural language commands. Type "make the CTA bigger", "add a search bar", "center the login form" — the agent regenerates the SVG inline. Chat history tracks all edits.
+
+### Project Management
+- **List**: All projects with status badges and artifact completion dots
+- **View**: Colorful solid-card sections with colored accents per artifact type
+- **Export**: Copy Markdown, download `.md`, or Print/Save as PDF
+- **Delete**: Two-step confirm before permanent deletion
 
 ---
 
 ## Roadmap
 
-### ✅ Phase 0: Setup
-- [x] Logo (LEGO brick icon)
+### ✅ Phase 0 — Setup
 - [x] Next.js + Tailwind + shadcn/ui
+- [x] LEGO brick logo
 - [x] Red/black/white theme
 
-### ✅ Phase 1: Backend
-- [x] OpenCode Go integration
-- [x] Research Agent
-- [x] Story Generator Agent
-- [x] Wireframe Generator Agent
-- [x] PRD Agent
-- [x] Roadmap Agent
-- [x] Full pipeline
-- [x] Project store
-
-### ✅ Phase 1: Frontend
-- [x] Landing page with recent projects
-- [x] Idea input dashboard with live progress
-- [x] Project view with all artifacts
+### ✅ Phase 1 — Core
+- [x] OpenCode Go integration (blocking + streaming)
+- [x] 5 AI agents (Research, Stories, Wireframes, PRD, Roadmap)
+- [x] File-based JSON store with CRUD + delete
+- [x] SSE streaming pipeline
+- [x] Terminal typewriter landing page
+- [x] Idea input with live progress
+- [x] Colorful project view
+- [x] Projects list page
 - [x] Export (Markdown, Print/PDF)
-- [x] Animated progress with agent messages
 
-### TODO: Phase 2
-- [ ] Live SSE streaming for pipeline progress
-- [ ] Voice input for product ideas
-- [ ] Wireframe chat (natural language wireframe editing)
-- [ ] Jira/Linear/GitHub integration for roadmap export
-- [ ] Multi-format PRD export (Notion, Google Docs, Confluence)
+### ✅ Phase 2 — Enhancements
+- [x] 3D neural network background (Obsidian-style)
+- [x] Natural language agent thinking in terminal
+- [x] Wireframe chat (NL editing)
+- [x] Project delete
 
-### TODO: Phase 3
-- [ ] User feedback ingestion and roadmap adjustment
+### TODO — Phase 3
+- [ ] Jira/Linear/GitHub roadmap export
+- [ ] Multi-format PRD export (Notion, Google Docs)
+- [ ] User feedback ingestion
 - [ ] Competitor monitoring alerts
-- [ ] Stakeholder sharing with read-only views
+- [ ] Stakeholder sharing (read-only links)
 
-### TODO: Phase 4
+### TODO — Phase 4
 - [ ] Template marketplace
 - [ ] Team collaboration
 - [ ] Analytics dashboard
 
 ---
 
-## License
+## Built by
 
-MIT
+**Md. Arafath Hossain Akash** · [github.com/ArafathUIU](https://github.com/ArafathUIU)
+
+---
+
+MIT License
