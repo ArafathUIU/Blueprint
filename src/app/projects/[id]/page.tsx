@@ -49,8 +49,8 @@ export default async function ProjectPage({
             {project.status.replace(/_/g, " ")}
           </Badge>
         </div>
-        <p className="max-w-2xl text-muted-foreground">{project.idea}</p>
-        {project.status === "complete" && (
+        <p className="max-w-2xl text-white/60">{project.idea}</p>
+        {(project.status === "complete" || project.research || project.stories) && (
           <div className="mt-2">
             <ExportButtons project={project} />
           </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Link from "next/link";
+import { NeuralBackground } from "@/components/neural-background";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,33 +34,29 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="relative min-h-full flex flex-col bg-background text-foreground">
+        {/* Neural network background — subtle, always present */}
+        <NeuralBackground />
+
         <TooltipProvider>
-          <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <header className="sticky top-0 z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
             <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-6">
-              <a href="/" className="flex items-center gap-2">
-                <img src="/icon.svg" alt="Blueprint" className="h-8 w-8" />
-                <img
-                  src="/logo-horizontal.svg"
-                  alt="Blueprint"
-                  className="hidden h-7 sm:block dark:hidden"
-                />
-                <img
-                  src="/logo-dark.svg"
-                  alt="Blueprint"
-                  className="hidden h-7 sm:hidden dark:sm:block"
-                />
-              </a>
+              <Link href="/" className="flex items-center gap-2 no-underline">
+                <span className="font-sans text-xl font-bold tracking-tight text-white">
+                  blueprint
+                </span>
+                <span className="mt-0.5 h-2 w-2 rounded-full bg-red-500" />
+              </Link>
               <div className="flex-1" />
               <Link
                 href="/new"
-                className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                className="inline-flex h-9 items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-medium text-white transition-colors hover:bg-red-500"
               >
                 New Blueprint
               </Link>
             </div>
           </header>
-          <main className="flex-1">{children}</main>
+          <main className="relative z-10 flex-1">{children}</main>
         </TooltipProvider>
       </body>
     </html>

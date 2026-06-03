@@ -11,10 +11,10 @@ import { LiveStreamPanel, type StreamEntry } from "@/components/live-stream-pane
 import { cn } from "@/lib/utils";
 
 // Dynamically import Three.js canvas — SSR incompatible
-const ParticleRingCanvas = dynamic(
+const NeuralBG = dynamic(
   () =>
-    import("@/components/particle-ring-canvas").then((m) => ({
-      default: m.ParticleRingCanvas,
+    import("@/components/neural-network-canvas").then((m) => ({
+      default: m.NeuralNetworkCanvas,
     })),
   { ssr: false }
 );
@@ -52,6 +52,7 @@ export default function NewProjectPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentStreamStep, setCurrentStreamStep] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const streamTextRef = useRef<Record<string, string>>({});
 
   const updateStep = useCallback((step: string, state: StepState) => {
     setStepStates((prev) => ({ ...prev, [step]: state }));
@@ -147,14 +148,24 @@ export default function NewProjectPage() {
               }
 
               case "token": {
-                setEntries((prev) => [
-                  ...prev,
-                  {
-                    type: "token",
-                    step: event.step as string,
-                    text: event.text as string,
-                  },
-                ]);
+                const step = event.step as string;
+                const text = event.text as string;
+                streamTextRef.current[step] =
+                  (streamTextRef.current[step] || "") + text;
+
+                setEntries((prev) => {
+                  const filtered = prev.filter(
+                    (e) => !(e.type === "token" && e.step === step)
+                  );
+                  return [
+                    ...filtered,
+                    {
+                      type: "token",
+                      step,
+                      text: streamTextRef.current[step],
+                    },
+                  ];
+                });
                 break;
               }
 
@@ -232,7 +243,7 @@ export default function NewProjectPage() {
       {/* 3D particle ring background — only during generation */}
       {loading && (
         <div className="absolute inset-0 z-0">
-          <ParticleRingCanvas state={ringState} />
+          <NeuralBG state={ringState} />
         </div>
       )}
 
