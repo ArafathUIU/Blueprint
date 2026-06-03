@@ -17,13 +17,13 @@ export default async function ProjectPage({
   if (!project) {
     return (
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-6 py-24 text-center">
-        <h1 className="text-2xl font-bold">Project Not Found</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold text-white">Project Not Found</h1>
+        <p className="text-white/40">
           The project you&apos;re looking for doesn&apos;t exist.
         </p>
         <Link
           href="/new"
-          className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-6 text-sm font-medium text-primary-foreground"
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-red-600 px-6 text-sm font-medium text-white"
         >
           Create New Blueprint
         </Link>
@@ -36,7 +36,9 @@ export default async function ProjectPage({
       {/* Header */}
       <div className="mb-10 flex flex-col gap-2">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-white">
+            {project.name}
+          </h1>
           <Badge
             variant={
               project.status === "complete"
@@ -49,7 +51,7 @@ export default async function ProjectPage({
             {project.status.replace(/_/g, " ")}
           </Badge>
         </div>
-        <p className="max-w-2xl text-white/60">{project.idea}</p>
+        <p className="max-w-2xl text-white/50">{project.idea}</p>
         {(project.status === "complete" || project.research || project.stories) && (
           <div className="mt-2">
             <ExportButtons project={project} />
@@ -57,11 +59,17 @@ export default async function ProjectPage({
         )}
       </div>
 
+      {project.error && (
+        <div className="mb-8 rounded-xl border border-red-500/20 bg-red-950/30 p-4 text-sm text-red-300 backdrop-blur">
+          {project.error}
+        </div>
+      )}
+
       {/* Research */}
       {project.research && (
         <>
           <Section title="Market Research">
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <StatCard label="TAM" value={project.research.tam} />
               <StatCard label="SAM" value={project.research.sam} />
               <StatCard label="SOM" value={project.research.som} />
@@ -72,25 +80,20 @@ export default async function ProjectPage({
             </div>
 
             {project.research.summary && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    {project.research.summary}
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5 backdrop-blur">
+                <h3 className="mb-2 text-sm font-semibold text-white/70">Summary</h3>
+                <p className="text-sm leading-relaxed text-white/50">
+                  {project.research.summary}
+                </p>
+              </div>
             )}
 
-            {/* Trends */}
             {project.research.trends.length > 0 && (
               <div className="flex flex-col gap-2">
-                <h3 className="text-sm font-semibold">Key Trends</h3>
+                <h3 className="text-sm font-semibold text-white/70">Key Trends</h3>
                 <div className="flex flex-wrap gap-2">
                   {project.research.trends.map((t, i) => (
-                    <Badge key={i} variant="outline">
+                    <Badge key={i} variant="outline" className="border-white/10 text-white/60">
                       {t}
                     </Badge>
                   ))}
@@ -98,29 +101,26 @@ export default async function ProjectPage({
               </div>
             )}
 
-            {/* Competitors */}
             {project.research.competitors.length > 0 && (
               <div className="flex flex-col gap-3">
-                <h3 className="text-sm font-semibold">Competitors</h3>
-                <div className="overflow-x-auto rounded-lg border">
+                <h3 className="text-sm font-semibold text-white/70">Competitors</h3>
+                <div className="overflow-x-auto rounded-xl border border-white/5">
                   <table className="w-full text-sm">
-                    <thead className="bg-muted/50">
+                    <thead className="bg-white/[0.03]">
                       <tr>
-                        <th className="px-4 py-2 text-left font-medium">Company</th>
-                        <th className="px-4 py-2 text-left font-medium">Strength</th>
-                        <th className="px-4 py-2 text-left font-medium">Weakness</th>
-                        <th className="px-4 py-2 text-left font-medium">Our Edge</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Company</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Strength</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Weakness</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Our Edge</th>
                       </tr>
                     </thead>
                     <tbody>
                       {project.research.competitors.map((c, i) => (
-                        <tr key={i} className="border-t">
-                          <td className="px-4 py-2 font-medium">{c.name}</td>
-                          <td className="px-4 py-2 text-muted-foreground">{c.strength}</td>
-                          <td className="px-4 py-2 text-muted-foreground">{c.weakness}</td>
-                          <td className="px-4 py-2 text-muted-foreground">
-                            {c.differentiation}
-                          </td>
+                        <tr key={i} className="border-t border-white/5">
+                          <td className="px-4 py-3 font-medium text-white/80">{c.name}</td>
+                          <td className="px-4 py-3 text-white/40">{c.strength}</td>
+                          <td className="px-4 py-3 text-white/40">{c.weakness}</td>
+                          <td className="px-4 py-3 text-white/50">{c.differentiation}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -129,17 +129,17 @@ export default async function ProjectPage({
               </div>
             )}
           </Section>
-          <Separator />
+          <GlassSeparator />
         </>
       )}
 
       {/* User Stories */}
-      {project.stories && (
+      {project.stories && project.stories.length > 0 && (
         <>
           <Section title="User Stories">
             <StoriesTable stories={project.stories} />
           </Section>
-          <Separator />
+          <GlassSeparator />
         </>
       )}
 
@@ -147,13 +147,13 @@ export default async function ProjectPage({
       {project.wireframes && project.wireframes.length > 0 && (
         <>
           <Section title="Wireframes">
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               {project.wireframes.map((wf) => (
                 <WireframeCard key={wf.id} wireframe={wf} />
               ))}
             </div>
           </Section>
-          <Separator />
+          <GlassSeparator />
         </>
       )}
 
@@ -161,34 +161,32 @@ export default async function ProjectPage({
       {project.prd && (
         <>
           <Section title="PRD">
-            <div className="flex flex-col gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Problem Statement</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    {project.prd.problemStatement}
-                  </p>
-                </CardContent>
-              </Card>
+            <div className="flex flex-col gap-5">
+              <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5 backdrop-blur">
+                <h3 className="mb-2 text-sm font-semibold text-white/70">
+                  Problem Statement
+                </h3>
+                <p className="text-sm leading-relaxed text-white/50">
+                  {project.prd.problemStatement}
+                </p>
+              </div>
 
               {project.prd.goals.length > 0 && (
-                <div className="overflow-x-auto rounded-lg border">
+                <div className="overflow-x-auto rounded-xl border border-white/5">
                   <table className="w-full text-sm">
-                    <thead className="bg-muted/50">
+                    <thead className="bg-white/[0.03]">
                       <tr>
-                        <th className="px-4 py-2 text-left font-medium">Goal</th>
-                        <th className="px-4 py-2 text-left font-medium">Metric</th>
-                        <th className="px-4 py-2 text-left font-medium">Target</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Goal</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Metric</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Target</th>
                       </tr>
                     </thead>
                     <tbody>
                       {project.prd.goals.map((g, i) => (
-                        <tr key={i} className="border-t">
-                          <td className="px-4 py-2">{g.goal}</td>
-                          <td className="px-4 py-2 text-muted-foreground">{g.metric}</td>
-                          <td className="px-4 py-2 font-medium">{g.target}</td>
+                        <tr key={i} className="border-t border-white/5">
+                          <td className="px-4 py-3 text-white/80">{g.goal}</td>
+                          <td className="px-4 py-3 text-white/40">{g.metric}</td>
+                          <td className="px-4 py-3 font-medium text-white/70">{g.target}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -197,27 +195,31 @@ export default async function ProjectPage({
               )}
 
               {project.prd.risks.length > 0 && (
-                <div className="overflow-x-auto rounded-lg border">
+                <div className="overflow-x-auto rounded-xl border border-white/5">
                   <table className="w-full text-sm">
-                    <thead className="bg-muted/50">
+                    <thead className="bg-white/[0.03]">
                       <tr>
-                        <th className="px-4 py-2 text-left font-medium">Risk</th>
-                        <th className="px-4 py-2 text-left font-medium">Likelihood</th>
-                        <th className="px-4 py-2 text-left font-medium">Impact</th>
-                        <th className="px-4 py-2 text-left font-medium">Mitigation</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Risk</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Likelihood</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Impact</th>
+                        <th className="px-4 py-3 text-left font-medium text-white/60">Mitigation</th>
                       </tr>
                     </thead>
                     <tbody>
                       {project.prd.risks.map((r, i) => (
-                        <tr key={i} className="border-t">
-                          <td className="px-4 py-2 font-medium">{r.risk}</td>
-                          <td className="px-4 py-2">
-                            <Badge variant="outline">{r.likelihood}</Badge>
+                        <tr key={i} className="border-t border-white/5">
+                          <td className="px-4 py-3 font-medium text-white/80">{r.risk}</td>
+                          <td className="px-4 py-3">
+                            <Badge variant="outline" className="border-white/10 text-white/60">
+                              {r.likelihood}
+                            </Badge>
                           </td>
-                          <td className="px-4 py-2">
-                            <Badge variant="outline">{r.impact}</Badge>
+                          <td className="px-4 py-3">
+                            <Badge variant="outline" className="border-white/10 text-white/60">
+                              {r.impact}
+                            </Badge>
                           </td>
-                          <td className="px-4 py-2 text-muted-foreground">{r.mitigation}</td>
+                          <td className="px-4 py-3 text-white/40">{r.mitigation}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -226,63 +228,53 @@ export default async function ProjectPage({
               )}
             </div>
           </Section>
-          <Separator />
+          <GlassSeparator />
         </>
       )}
 
       {/* Roadmap */}
-      {project.roadmap && (
+      {project.roadmap && project.roadmap.length > 0 && (
         <Section title="Development Roadmap">
           <div className="flex flex-col gap-4">
             {project.roadmap.map((phase, i) => (
-              <Card key={i}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{phase.phase}</CardTitle>
-                    <Badge variant="secondary">{phase.timeline}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col gap-2">
-                    <h4 className="text-xs font-semibold uppercase text-muted-foreground">
-                      Deliverables
-                    </h4>
-                    <ul className="list-inside list-disc text-sm text-muted-foreground">
-                      {phase.deliverables.map((d, j) => (
-                        <li key={j}>{d}</li>
-                      ))}
-                    </ul>
-                    {phase.stories.length > 0 && (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Stories: {phase.stories.join(", ")}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <div
+                key={i}
+                className="rounded-xl border border-white/5 bg-white/[0.02] p-5 backdrop-blur"
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-base font-semibold text-white/80">{phase.phase}</h3>
+                  <Badge variant="secondary" className="border-white/10 bg-white/5 text-white/50">
+                    {phase.timeline}
+                  </Badge>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-xs font-semibold uppercase text-white/30">Deliverables</h4>
+                  <ul className="list-inside list-disc text-sm text-white/50">
+                    {phase.deliverables.map((d, j) => (
+                      <li key={j}>{d}</li>
+                    ))}
+                  </ul>
+                  {phase.stories.length > 0 && (
+                    <p className="mt-2 font-mono text-xs text-white/20">
+                      stories: {phase.stories.join(", ")}
+                    </p>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         </Section>
       )}
 
-      {/* CTA if not complete */}
       {project.status === "draft" && (
         <div className="mt-8 text-center">
           <Link
             href={`/api/projects/${project.id}/pipeline`}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-6 text-sm font-medium text-primary-foreground"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-red-600 px-6 text-sm font-medium text-white"
           >
             Run Full Pipeline
           </Link>
         </div>
-      )}
-
-      {project.error && (
-        <Card className="mt-8 border-destructive/30 bg-destructive/5">
-          <CardContent className="py-4">
-            <p className="text-sm text-destructive">{project.error}</p>
-          </CardContent>
-        </Card>
       )}
     </div>
   );
@@ -290,83 +282,62 @@ export default async function ProjectPage({
 
 /* --- Sub-components --- */
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="py-8">
-      <h2 className="mb-6 text-xl font-bold tracking-tight">{title}</h2>
-      <div className="flex flex-col gap-6">{children}</div>
+      <h2 className="mb-6 text-xl font-bold tracking-tight text-white/90">{title}</h2>
+      <div className="flex flex-col gap-5">{children}</div>
     </section>
   );
 }
 
+function GlassSeparator() {
+  return <Separator className="bg-white/5" />;
+}
+
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <Card>
-      <CardContent className="py-4">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className="mt-1 text-lg font-bold">{value}</p>
-      </CardContent>
-    </Card>
+    <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4 backdrop-blur">
+      <p className="text-xs font-medium text-white/30">{label}</p>
+      <p className="mt-1 text-lg font-bold text-white">{value}</p>
+    </div>
   );
 }
 
 function StoriesTable({ stories }: { stories: UserStory[] }) {
-  const priorityColor: Record<string, string> = {
-    P0: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-    P1: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-    P2: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  };
-
-  const moscowColor: Record<string, string> = {
-    Must: "border-red-300 bg-red-50 dark:bg-red-950/20",
-    Should: "border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20",
-    Could: "border-blue-300 bg-blue-50 dark:bg-blue-950/20",
-    Wont: "border-gray-300 bg-gray-50 dark:bg-gray-800",
+  const moscowBorder: Record<string, string> = {
+    Must: "border-red-500/20",
+    Should: "border-amber-500/20",
+    Could: "border-blue-500/20",
+    Wont: "border-white/5",
   };
 
   return (
     <div className="flex flex-col gap-3">
       {stories.map((story) => (
-        <Card key={story.id} className={moscowColor[story.moscow] || ""}>
-          <CardContent className="py-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {story.id}
-                  </span>
-                  <Badge variant="secondary" className="text-[10px]">
-                    {story.epic}
-                  </Badge>
-                  <Badge
-                    className={
-                      priorityColor[story.priority] || ""
-                    }
-                  >
-                    {story.priority}
-                  </Badge>
-                  <Badge variant="outline" className="text-[10px]">
-                    {story.moscow}
-                  </Badge>
-                </div>
-                <p className="text-sm font-medium">{story.story}</p>
-                {story.acceptanceCriteria.length > 0 && (
-                  <ul className="mt-2 list-inside list-disc text-xs text-muted-foreground">
-                    {story.acceptanceCriteria.map((ac, i) => (
-                      <li key={i}>{ac}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div
+          key={story.id}
+          className={`rounded-xl border ${moscowBorder[story.moscow] || "border-white/5"} bg-white/[0.02] p-4 backdrop-blur`}
+        >
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="font-mono text-xs text-white/30">{story.id}</span>
+            <Badge variant="secondary" className="border-white/10 bg-white/5 text-white/50 text-[10px]">
+              {story.epic}
+            </Badge>
+            <Badge className="bg-red-600/20 text-red-300 text-[10px]">{story.priority}</Badge>
+            <Badge variant="outline" className="border-white/10 text-white/40 text-[10px]">
+              {story.moscow}
+            </Badge>
+          </div>
+          <p className="text-sm text-white/80">{story.story}</p>
+          {story.acceptanceCriteria.length > 0 && (
+            <ul className="mt-2 list-inside list-disc text-xs text-white/40">
+              {story.acceptanceCriteria.map((ac, i) => (
+                <li key={i}>{ac}</li>
+              ))}
+            </ul>
+          )}
+        </div>
       ))}
     </div>
   );
@@ -374,26 +345,20 @@ function StoriesTable({ stories }: { stories: UserStory[] }) {
 
 function WireframeCard({ wireframe }: { wireframe: Wireframe }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm">{wireframe.title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-3">
-          <p className="text-xs text-muted-foreground">{wireframe.description}</p>
-          <div
-            className="flex justify-center rounded-lg border bg-muted/30 p-2"
-            dangerouslySetInnerHTML={{ __html: wireframe.svg }}
-          />
-          {wireframe.annotations.length > 0 && (
-            <ul className="list-inside list-disc text-xs text-muted-foreground">
-              {wireframe.annotations.map((a, i) => (
-                <li key={i}>{a}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 backdrop-blur">
+      <h3 className="mb-2 text-sm font-semibold text-white/70">{wireframe.title}</h3>
+      <p className="mb-3 text-xs text-white/40">{wireframe.description}</p>
+      <div
+        className="flex justify-center rounded-lg border border-white/5 bg-white/[0.03] p-2"
+        dangerouslySetInnerHTML={{ __html: wireframe.svg }}
+      />
+      {wireframe.annotations.length > 0 && (
+        <ul className="mt-3 list-inside list-disc text-xs text-white/30">
+          {wireframe.annotations.map((a, i) => (
+            <li key={i}>{a}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
