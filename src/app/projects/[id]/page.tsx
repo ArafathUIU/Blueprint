@@ -2,7 +2,8 @@ import Link from "next/link";
 import { getProject } from "@/lib/store";
 import { ExportButtons } from "@/components/export-buttons";
 import { DeleteButton } from "@/components/delete-button";
-import type { UserStory, Wireframe } from "@/lib/types";
+import { WireframeWithChat } from "@/components/wireframe-with-chat";
+import type { UserStory } from "@/lib/types";
 
 export default async function ProjectPage({
   params,
@@ -157,18 +158,7 @@ export default async function ProjectPage({
 
           <div className="grid gap-4 sm:grid-cols-2">
             {project.wireframes.map((wf) => (
-              <div key={wf.id} className="rounded-xl bg-zinc-900 border border-zinc-800 p-5">
-                <h4 className="text-sm font-semibold text-white mb-1">{wf.title}</h4>
-                <p className="text-xs text-zinc-400 mb-3">{wf.description}</p>
-                <div className="rounded-lg bg-white p-3 flex justify-center" dangerouslySetInnerHTML={{ __html: wf.svg }} />
-                {wf.annotations.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {wf.annotations.map((a, j) => (
-                      <span key={j} className="rounded bg-purple-950 border border-purple-800 px-2 py-0.5 text-[10px] text-purple-300">{a}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <WireframeWithChat key={wf.id} wireframe={wf} projectId={project.id} />
             ))}
           </div>
         </section>
