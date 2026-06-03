@@ -35,24 +35,16 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="relative min-h-full flex flex-col bg-background text-foreground">
-        {/* Neural network background — subtle, always present */}
         <NeuralBackground />
 
         <TooltipProvider>
           <header className="sticky top-0 z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
-            <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-6">
+            <div className="mx-auto flex h-14 max-w-6xl items-center px-6">
               <Link href="/" className="flex items-center gap-2 no-underline">
-                <span className="font-sans text-xl font-bold tracking-tight text-white">
+                <span className="font-sans text-lg font-medium tracking-tight text-white">
                   blueprint
                 </span>
                 <span className="mt-0.5 h-2 w-2 rounded-full bg-red-500" />
-              </Link>
-              <div className="flex-1" />
-              <Link
-                href="/new"
-                className="inline-flex h-9 items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-medium text-white transition-colors hover:bg-red-500"
-              >
-                New Blueprint
               </Link>
             </div>
           </header>
