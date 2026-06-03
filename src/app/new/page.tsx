@@ -1,23 +1,14 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LiveStreamPanel, type StreamEntry } from "@/components/live-stream-panel";
+import { AudioWaveform } from "@/components/audio-waveform";
 import { cn } from "@/lib/utils";
-
-// Dynamically import Three.js canvas — SSR incompatible
-const NeuralBG = dynamic(
-  () =>
-    import("@/components/neural-network-canvas").then((m) => ({
-      default: m.NeuralNetworkCanvas,
-    })),
-  { ssr: false }
-);
 
 const ORDER = ["research", "stories", "wireframes", "prd", "roadmap"];
 
@@ -48,10 +39,9 @@ export default function NewProjectPage() {
     roadmap: "idle",
   });
   const [entries, setEntries] = useState<StreamEntry[]>([]);
-  const [ringState, setRingState] = useState<"idle" | "streaming" | "complete" | "error">("idle");
+  const [waveformActive, setWaveformActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentStreamStep, setCurrentStreamStep] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
   const streamTextRef = useRef<Record<string, string>>({});
 
   const updateStep = useCallback((step: string, state: StepState) => {
@@ -64,6 +54,7 @@ export default function NewProjectPage() {
     setLoading(true);
     setError(null);
     setEntries([]);
+    setWaveformActive(true);
     setStepStates({
       research: "idle",
       stories: "idle",
@@ -71,9 +62,9 @@ export default function NewProjectPage() {
       prd: "idle",
       roadmap: "idle",
     });
-    setRingState("streaming");
 
     try {
+      // Step 1: Create project
       const createRes = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -91,20 +82,19 @@ export default function NewProjectPage() {
       const project = await createRes.json();
       setProjectId(project.id);
 
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      const response = await fetch(
+      // Step 2: Start SSE pipeline
+      const sseRes = await fetch(
         `/api/projects/${project.id}/pipeline/stream`,
-        { method: "POST", signal: controller.signal }
+        { method: "POST" }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to start pipeline");
+      if (!sseRes.ok) {
+        const errText = await sseRes.text();
+        throw new Error(`Pipeline failed (${sseRes.status}): ${errText}`);
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("No response stream");
+      const reader = sseRes.body?.getReader();
+      if (!reader) throw new Error("Response body is not readable (SSE requires Node.js runtime)");
 
       const decoder = new TextDecoder();
       let buffer = "";
@@ -118,21 +108,18 @@ export default function NewProjectPage() {
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data: ")) continue;
 
           try {
-            const event = JSON.parse(line.slice(6));
+            const event = JSON.parse(trimmed.slice(6));
 
             switch (event.type) {
               case "step_start": {
                 const step = event.step as string;
                 updateStep(step, "running");
                 setCurrentStreamStep(step);
-                setEntries((prev) => [
-                  ...prev,
-                  { type: "header", step },
-                ]);
-                setRingState("streaming");
+                setEntries((prev) => [...prev, { type: "header", step }]);
                 break;
               }
 
@@ -140,10 +127,7 @@ export default function NewProjectPage() {
                 const step = event.step as string;
                 updateStep(step, "running");
                 setCurrentStreamStep(step);
-                setEntries((prev) => [
-                  ...prev,
-                  { type: "spinner", step },
-                ]);
+                setEntries((prev) => [...prev, { type: "spinner", step }]);
                 break;
               }
 
@@ -159,11 +143,7 @@ export default function NewProjectPage() {
                   );
                   return [
                     ...filtered,
-                    {
-                      type: "token",
-                      step,
-                      text: streamTextRef.current[step],
-                    },
+                    { type: "token", step, text: streamTextRef.current[step] },
                   ];
                 });
                 break;
@@ -172,10 +152,7 @@ export default function NewProjectPage() {
               case "step_end": {
                 const step = event.step as string;
                 updateStep(step, "done");
-                setEntries((prev) => [
-                  ...prev,
-                  { type: "done", step },
-                ]);
+                setEntries((prev) => [...prev, { type: "done", step }]);
                 break;
               }
 
@@ -194,42 +171,36 @@ export default function NewProjectPage() {
               case "error": {
                 const step = event.step as string;
                 updateStep(step, "error");
-                setRingState("error");
                 setEntries((prev) => [
                   ...prev,
-                  {
-                    type: "error",
-                    step,
-                    text: event.message as string,
-                  },
+                  { type: "error", step, text: event.message as string },
                 ]);
                 setError(event.message as string);
                 break;
               }
 
               case "done": {
-                setRingState("complete");
                 setCurrentStreamStep(null);
+                setWaveformActive(false);
                 setTimeout(() => {
-                  router.push(
-                    `/projects/${event.projectId as string}`
-                  );
+                  router.push(`/projects/${event.projectId as string}`);
                 }, 1500);
                 break;
               }
             }
           } catch {
-            // skip unparseable lines
+            // Skip unparseable SSE lines
           }
         }
       }
     } catch (e: unknown) {
-      if ((e as Error).name === "AbortError") return;
+      if ((e as DOMException)?.name === "AbortError") return;
       const msg = e instanceof Error ? e.message : "Something went wrong";
+      console.error("Pipeline error:", e);
       setError(msg);
-      setRingState("error");
     } finally {
       setLoading(false);
+      setWaveformActive(false);
     }
   }
 
@@ -240,15 +211,15 @@ export default function NewProjectPage() {
 
   return (
     <div className="relative min-h-[calc(100vh-3.5rem)]">
-      {/* 3D particle ring background — only during generation */}
-      {loading && (
-        <div className="absolute inset-0 z-0">
-          <NeuralBG state={ringState} />
+      {/* Waveform at bottom during generation */}
+      {waveformActive && (
+        <div className="absolute bottom-0 left-0 right-0 z-0 h-28 opacity-30">
+          <AudioWaveform state="streaming" />
         </div>
       )}
 
       <div className="relative z-10 mx-auto flex max-w-3xl flex-col gap-8 px-6 py-12">
-        {/* Form — before generation */}
+        {/* Form */}
         {!loading && (
           <>
             <div className="flex flex-col gap-2 text-center">
@@ -317,21 +288,13 @@ export default function NewProjectPage() {
                       <div
                         className={cn(
                           "flex h-9 w-9 items-center justify-center rounded-full text-sm transition-all",
-                          state === "idle" &&
-                            "bg-white/5 text-white/20 backdrop-blur",
-                          state === "running" &&
-                            "bg-white/5 text-white ring-1 ring-white/20 animate-pulse backdrop-blur",
-                          state === "done" &&
-                            "bg-red-600/30 text-red-300 ring-1 ring-red-500/50 backdrop-blur",
-                          state === "error" &&
-                            "bg-red-900/30 text-red-400 ring-1 ring-red-500/50 backdrop-blur"
+                          state === "idle" && "bg-white/5 text-white/20",
+                          state === "running" && "bg-white/5 text-white ring-1 ring-white/20 animate-pulse",
+                          state === "done" && "bg-red-600/30 text-red-300 ring-1 ring-red-500/50",
+                          state === "error" && "bg-red-900/30 text-red-400 ring-1 ring-red-500/50"
                         )}
                       >
-                        {state === "done"
-                          ? "\u2713"
-                          : state === "error"
-                            ? "\u2717"
-                            : config.icon}
+                        {state === "done" ? "\u2713" : state === "error" ? "\u2717" : config.icon}
                       </div>
                       <span
                         className={cn(
@@ -349,9 +312,7 @@ export default function NewProjectPage() {
                       <div
                         className={cn(
                           "mx-1 h-px w-3 sm:w-6 transition-colors",
-                          state === "done"
-                            ? "bg-red-500/50"
-                            : "bg-white/10"
+                          state === "done" ? "bg-red-500/50" : "bg-white/10"
                         )}
                       />
                     )}
@@ -363,21 +324,21 @@ export default function NewProjectPage() {
             {/* Live stream panel */}
             <LiveStreamPanel
               entries={entries}
-              className="w-full border-white/10 bg-black/80"
+              className="w-full border-white/[0.08] shadow-2xl shadow-black/60"
             />
 
-            {/* Error message */}
+            {/* Error */}
             {error && (
-              <div className="w-full rounded-lg border border-red-500/30 bg-red-950/30 p-3 text-sm text-red-300 backdrop-blur">
+              <div className="w-full rounded-lg border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-300">
                 {error}
               </div>
             )}
 
-            {/* Complete message */}
+            {/* Complete */}
             {allDone && (
-              <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm text-white/60 backdrop-blur">
+              <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm text-white/60">
                 <span className="inline-block h-2 w-2 rounded-full bg-green-400" />
-                All done! Opening your blueprint...
+                Opening your blueprint...
               </div>
             )}
           </div>
