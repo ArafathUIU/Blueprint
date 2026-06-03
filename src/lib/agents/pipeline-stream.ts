@@ -3,9 +3,14 @@ import { streamAgent } from "../ai";
 import { wireframeAgent } from "./wireframe-gen";
 import { updateProject } from "../store";
 
-// System prompts — same as the individual agents
-const RESEARCH_PROMPT = `You are an expert market research analyst. Given a product idea, you must produce a comprehensive market research report. Output ONLY valid JSON matching this schema:
+// System prompts — encourage thinking out loud before structured output
+const RESEARCH_PROMPT = `You are an expert market research analyst. Think step-by-step out loud as you analyze the product idea naturally, like you're talking to yourself while working. Show your reasoning about the market, competitors, personas, and viability. After your analysis, output the final result as JSON in a code block.
 
+Example thinking style:
+"ok, let me analyze this... the market for AI fitness apps has been growing rapidly since 2024. TAM is probably around $4-5B given the global wellness market. for SAM i need to narrow to mobile-first AI fitness specifically... that's likely $700-900M. this is a strong category but execution-heavy."
+
+JSON format (output after your thinking):
+\`\`\`json
 {
   "tam": "Total Addressable Market estimate with source",
   "sam": "Serviceable Addressable Market estimate",
@@ -20,14 +25,39 @@ const RESEARCH_PROMPT = `You are an expert market research analyst. Given a prod
   "viabilityScore": 0-100,
   "summary": "2-3 sentence executive summary of findings"
 }
+\`\`\`
 
-Provide realistic, well-researched estimates. Include 4-6 competitors and 3-4 personas. Be specific with numbers.`;
+Provide realistic, well-researched estimates. Include 4-6 real competitors and 3-4 personas. Be specific with numbers. Base on actual market data.`;
 
-const STORIES_PROMPT = `You are an expert product manager specializing in agile user story creation. Given a product idea and its market research, generate 10-15 user stories with acceptance criteria. Output ONLY valid JSON array of: { id, epic, story, acceptanceCriteria, priority, moscow }. Priority: P0|P1|P2. Moscow: Must|Should|Could|Wont. Map stories to personas from research.`;
+const STORIES_PROMPT = `You are an expert product manager writing agile user stories. Think out loud as you analyze personas, define epics, and draft each story. Show your reasoning process naturally. After your thinking, output the stories as a JSON array in a code block.
 
-const PRD_PROMPT = `You are an expert technical product manager who writes professional Product Requirements Documents. Given a product idea, market research, user stories, and wireframes, assemble a complete PRD. Output ONLY valid JSON: { problemStatement, goals: [{goal, metric, target}], targetUsers, keyFeatures: [{feature, description, priority}], technicalArchitecture, successMetrics: [{metric, baseline, target}], risks: [{risk, likelihood, impact, mitigation}], dependencies }. Base everything on the provided context. Be specific and data-driven.`;
+Example thinking:
+"alright, based on the research, my personas are: fitness beginner (wants guidance), gym regular (wants optimization), personal trainer (wants client tools). let me structure epics... onboard & profile is a Must epic since users need biometric input first. core workout engine is the product's heart — P0. progress tracking is P1 since it drives retention..."
 
-const ROADMAP_PROMPT = `You are an expert technical project manager who creates development roadmaps. Given prioritized user stories, generate a phased development plan. Output ONLY valid JSON array of: { phase, timeline, deliverables, stories }. Phase 1 must be MVP with P0/Must stories only. Create 3-4 phases with 3-5 deliverables each. All stories must be assigned to a phase. Timeline should be realistic (4-6 weeks per phase).`;
+JSON format:
+\`\`\`json
+[{ "id": "US-001", "epic": "Epic name", "story": "As a [persona], I want [feature] so that [benefit]", "acceptanceCriteria": ["AC 1", "AC 2"], "priority": "P0|P1|P2", "moscow": "Must|Should|Could|Wont" }]
+\`\`\`
+
+Create 10-15 stories across 3-5 epics. At least 3 P0/Must. Map to real personas from the research.`;
+
+const PRD_PROMPT = `You are an expert technical product manager writing a PRD. Think out loud as you review all inputs (idea, research, stories, wireframes), define the problem, set goals, identify risks, and structure the document. Show your natural reasoning. Then output the PRD as JSON in a code block.
+
+JSON format:
+\`\`\`json
+{ "problemStatement": "...", "goals": [{"goal":"...", "metric":"...", "target":"..."}], "targetUsers": ["..."], "keyFeatures": [{"feature":"...", "description":"...", "priority":"P0|P1|P2"}], "technicalArchitecture": "...", "successMetrics": [{"metric":"...", "baseline":"...", "target":"..."}], "risks": [{"risk":"...", "likelihood":"Low|Medium|High", "impact":"Low|Medium|High", "mitigation":"..."}], "dependencies": ["..."] }
+\`\`\`
+
+Base everything on the provided context. Be specific and data-driven.`;
+
+const ROADMAP_PROMPT = `You are an expert technical project manager building a roadmap. Think out loud as you review the prioritized stories, define phases, estimate effort, and assign stories to each phase. Show your planning reasoning naturally. Then output the roadmap as a JSON array in a code block.
+
+JSON format:
+\`\`\`json
+[{ "phase": "Phase name", "timeline": "Weeks X-Y", "deliverables": ["..."], "stories": ["US-XXX"] }]
+\`\`\`
+
+Phase 1 must be MVP with P0/Must stories only. Create 3-4 phases with 3-5 deliverables each. All stories must be assigned. Timeline should be realistic (4-6 weeks per phase).`;
 
 // SSE event types
 export interface SseStepStart {

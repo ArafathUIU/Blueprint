@@ -117,15 +117,27 @@ export function ExportButtons({ project }: { project: Project }) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button variant="outline" size="sm" onClick={handleCopyMarkdown}>
+      <button
+        onClick={handleCopyMarkdown}
+        className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 text-xs font-medium text-white/70 transition-all hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+      >
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
         {copied ? "Copied!" : "Copy Markdown"}
-      </Button>
-      <Button variant="outline" size="sm" onClick={handleDownloadMarkdown}>
+      </button>
+      <button
+        onClick={handleDownloadMarkdown}
+        className="inline-flex h-9 items-center gap-2 rounded-lg bg-red-600 px-4 text-xs font-medium text-white transition-all hover:bg-red-500 hover:shadow-lg hover:shadow-red-500/20"
+      >
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Download .md
-      </Button>
-      <Button variant="outline" size="sm" onClick={handlePrint}>
+      </button>
+      <button
+        onClick={handlePrint}
+        className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 text-xs font-medium text-white/70 transition-all hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+      >
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 12H4a2 2 0 00-2 2v4a2 2 0 002 2h16a2 2 0 002-2v-4a2 2 0 00-2-2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
         Print / Save PDF
-      </Button>
+      </button>
     </div>
   );
 }
