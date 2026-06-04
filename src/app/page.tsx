@@ -65,7 +65,7 @@ const HOW_IT_WORKS = [
     icon: FileText,
     title: "Agent generates everything",
     description:
-      "Five specialized AI agents run sequentially: market research, user stories with acceptance criteria, SVG wireframes, a complete PRD, and a phased roadmap.",
+      "Five AI agents run in sequence, producing a complete product package with citations, wireframe mockups, and a phased sprint plan.",
   },
   {
     icon: Download,
@@ -98,13 +98,16 @@ export default function Home() {
         {/* Terminal window */}
         <div className="relative z-10 w-full max-w-2xl">
           {/* Window chrome */}
-          <div className="flex items-center gap-1.5 rounded-t-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 backdrop-blur-sm">
-            <div className="h-2.5 w-2.5 rounded-full bg-red-500/60" />
-            <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/60" />
-            <div className="h-2.5 w-2.5 rounded-full bg-green-500/60" />
-            <span className="ml-2 font-sans text-[10px] text-white/30 tracking-wider uppercase">
-              blueprint.app
-            </span>
+          <div className="flex items-center justify-between gap-1.5 rounded-t-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5">
+              <div className="h-2.5 w-2.5 rounded-full bg-red-500/60" />
+              <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/60" />
+              <div className="h-2.5 w-2.5 rounded-full bg-green-500/60" />
+              <span className="ml-2 font-sans text-[10px] text-white/30 tracking-wider uppercase">
+                blueprint.app
+              </span>
+            </div>
+            <span className="rounded bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 font-mono text-[9px] text-amber-400/70">SIMULATION</span>
           </div>
 
           {/* Terminal body */}

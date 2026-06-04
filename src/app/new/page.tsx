@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { LiveStreamPanel, type StreamEntry } from "@/components/live-stream-pane
 import { cn } from "@/lib/utils";
 
 const ORDER = ["research", "stories", "wireframes", "prd", "roadmap"];
+const MAX_IDEA_LENGTH = 800;
 const STEP_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
   research: { label: "Research", icon: "\u{1F50D}", color: "text-red-400" },
   stories: { label: "Stories", icon: "\u{1F4CB}", color: "text-amber-400" },
@@ -35,8 +36,18 @@ export default function NewProjectPage() {
     setStepStates((prev) => ({ ...prev, [step]: state }));
   }, []);
 
+  // Navigation guard — warn before leaving mid-generation
+  useEffect(() => {
+    if (!loading) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [loading]);
+
   async function handleGenerate() {
     if (!idea.trim()) return;
+    if (idea.trim().length < 10) { setError("Please write at least 10 characters describing your idea."); return; }
+    if (idea.trim().length > MAX_IDEA_LENGTH) { setError(`Idea is too long. Please keep it under ${MAX_IDEA_LENGTH} characters.`); return; }
     setLoading(true);
     setError(null);
     setEntries([]);
@@ -103,12 +114,17 @@ export default function NewProjectPage() {
             </div>
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="name" className="text-white/50">Project Name (optional)</Label>
+                <Label htmlFor="name" className="text-white/50">Project Name <span className="text-white/20">(optional)</span></Label>
                 <Input id="name" placeholder="e.g. Fitness AI App" value={name} onChange={(e) => setName(e.target.value)} className="border-white/10 bg-white/[0.04] text-white placeholder:text-white/20" />
+                <p className="text-[10px] text-white/15">Used as the title for your blueprint. If left blank, the first few words of your idea become the project name.</p>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="idea" className="text-white/50">Product Idea</Label>
-                <Textarea id="idea" placeholder="A mobile app that uses AI to generate personalized workout plans..." value={idea} onChange={(e) => setIdea(e.target.value)} className="min-h-36 resize-y border-white/10 bg-white/[0.04] text-white placeholder:text-white/20" />
+                <Label htmlFor="idea" className="text-white/50">Product Idea <span className="text-red-400">*</span></Label>
+                <Textarea id="idea" placeholder="Describe your product in 1-3 sentences. What does it do? Who is it for? What problem does it solve?&#10;&#10;Example: A mobile app that uses AI to generate personalized workout plans based on user biometrics and available equipment. Targets fitness beginners who don't know where to start." value={idea} onChange={(e) => setIdea(e.target.value)} className="min-h-36 resize-y border-white/10 bg-white/[0.04] text-white placeholder:text-white/20" />
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-white/20">Minimum 10 characters</span>
+                  <span className={idea.length > MAX_IDEA_LENGTH ? "text-red-400" : "text-white/20"}>{idea.length}/{MAX_IDEA_LENGTH}</span>
+                </div>
               </div>
               <Button size="lg" className="w-full" onClick={handleGenerate} disabled={!idea.trim()}>Generate Product Blueprint</Button>
             </div>
@@ -131,6 +147,7 @@ export default function NewProjectPage() {
               })}
             </div>
             <LiveStreamPanel entries={entries} className="w-full border-white/[0.08] shadow-2xl shadow-black/60" />
+            <p className="text-[10px] text-white/15">Estimated time: 4–7 minutes. The agent is analyzing, generating stories, designing wireframes, and assembling your PRD and roadmap.</p>
             {error && <div className="w-full rounded-lg border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-300">{error}</div>}
             {completedCount === ORDER.length && <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm text-white/60"><span className="inline-block h-2 w-2 rounded-full bg-green-400" />Opening your blueprint...</div>}
           </div>
