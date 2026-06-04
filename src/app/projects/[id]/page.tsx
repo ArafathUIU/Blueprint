@@ -1,17 +1,30 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getProject } from "@/lib/store";
 import { ExportButtons } from "@/components/export-buttons";
 import { DeleteButton } from "@/components/delete-button";
 import { WireframeWithChat } from "@/components/wireframe-with-chat";
 import type { UserStory } from "@/lib/types";
+import type { Project } from "@/lib/types";
 
-export default async function ProjectPage({
+export default function ProjectPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const project = getProject(id);
+  const [project, setProject] = useState<Project | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    params.then(({ id }) => {
+      setProject(getProject(id));
+      setLoaded(true);
+    });
+  }, [params]);
+
+  if (!loaded) return null;
 
   if (!project) {
     return (

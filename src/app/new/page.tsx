@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LiveStreamPanel, type StreamEntry } from "@/components/live-stream-panel";
 import { cn } from "@/lib/utils";
+import { createProject, saveProject, getProject } from "@/lib/store";
+import type { Project } from "@/lib/types";
 
 const ORDER = ["research", "stories", "wireframes", "prd", "roadmap"];
 
@@ -61,28 +63,19 @@ export default function NewProjectPage() {
     });
 
     try {
-      // Step 1: Create project
-      const createRes = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idea: idea.trim(),
-          name: name.trim() || idea.trim().slice(0, 50),
-        }),
-      });
-
-      if (!createRes.ok) {
-        const err = await createRes.json();
-        throw new Error(err.error || "Failed to create project");
-      }
-
-      const project = await createRes.json();
+      // Create project client-side (localStorage)
+      const project = createProject(idea.trim(), name.trim() || idea.trim().slice(0, 50));
+      saveProject(project);
       setProjectId(project.id);
 
-      // Step 2: Start SSE pipeline
+      // Send full project to SSE pipeline
       const sseRes = await fetch(
         `/api/projects/${project.id}/pipeline/stream`,
-        { method: "POST" }
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(project),
+        }
       );
 
       if (!sseRes.ok) {
@@ -150,6 +143,16 @@ export default function NewProjectPage() {
                 const step = event.step as string;
                 updateStep(step, "done");
                 setEntries((prev) => [...prev, { type: "done", step }]);
+
+                // Save result to localStorage
+                const existing = getProject(project.id);
+                if (existing && event.result) {
+                  if (step === "research") existing.research = event.result as Project["research"];
+                  if (step === "stories") existing.stories = event.result as Project["stories"];
+                  if (step === "prd") existing.prd = event.result as Project["prd"];
+                  if (step === "roadmap") existing.roadmap = event.result as Project["roadmap"];
+                  saveProject(existing);
+                }
                 break;
               }
 
@@ -162,6 +165,13 @@ export default function NewProjectPage() {
                   );
                   return [...filtered, { type: "done", step }];
                 });
+
+                // Save wireframe result
+                const existing = getProject(project.id);
+                if (existing && event.result) {
+                  existing.wireframes = event.result as Project["wireframes"];
+                  saveProject(existing);
+                }
                 break;
               }
 
@@ -178,6 +188,11 @@ export default function NewProjectPage() {
 
               case "done": {
                 setCurrentStreamStep(null);
+                const final = getProject(project.id);
+                if (final) {
+                  final.status = "complete";
+                  saveProject(final);
+                }
                 setTimeout(() => {
                   router.push(`/projects/${event.projectId as string}`);
                 }, 1500);

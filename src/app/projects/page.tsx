@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { listProjects } from "@/lib/store";
 import { DeleteButton } from "@/components/delete-button";
@@ -25,20 +28,15 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function ProjectsListPage() {
-  let projects: ReturnType<typeof listProjects>;
+  const [projects, setProjects] = useState<ReturnType<typeof listProjects>>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  try {
-    projects = listProjects();
-  } catch {
-    return (
-      <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center gap-4 px-6 py-24 text-center">
-        <p className="text-zinc-500">No projects found.</p>
-        <Link href="/new" className="inline-flex h-10 items-center justify-center rounded-lg bg-red-600 px-6 text-sm font-medium text-white">
-          Create your first blueprint
-        </Link>
-      </div>
-    );
-  }
+  useEffect(() => {
+    setProjects(listProjects());
+    setLoaded(true);
+  }, []);
+
+  if (!loaded) return null;
 
   if (projects.length === 0) {
     return (

@@ -1,7 +1,6 @@
 import type { Project } from "../types";
 import { streamAgent } from "../ai";
 import { wireframeAgent } from "./wireframe-gen";
-import { updateProject } from "../store";
 
 // System prompts — encourage thinking out loud before structured output
 const RESEARCH_PROMPT = `You are an expert market research analyst. Think step-by-step out loud as you analyze the product idea naturally, like you're talking to yourself while working. Show your reasoning about the market, competitors, personas, and viability. After your analysis, output the final result as JSON in a code block.
@@ -74,6 +73,7 @@ export interface SseToken {
 export interface SseStepEnd {
   type: "step_end";
   step: string;
+  result: unknown;
 }
 
 export interface SseStepStartSpinner {
@@ -84,6 +84,7 @@ export interface SseStepStartSpinner {
 export interface SseStepEndSpinner {
   type: "step_end_spinner";
   step: string;
+  result: unknown;
 }
 
 export interface SseError {
@@ -123,9 +124,7 @@ function parseJson<T>(text: string, label: string): T {
 async function* streamStep(
   step: string,
   systemPrompt: string,
-  userPrompt: string,
-  project: Project,
-  persistFn: (project: Project, result: unknown) => void
+  userPrompt: string
 ): AsyncGenerator<SseEvent> {
   yield { type: "step_start", step };
 
@@ -143,61 +142,38 @@ async function* streamStep(
     }
 
     const result = parseJson(fullText, step);
-    persistFn(project, result);
-    yield { type: "step_end", step };
+    yield { type: "step_end", step, result };
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    updateProject(project.id, { status: "error", error: msg });
     yield { type: "error", step, message: msg };
-    throw e; // stop pipeline
+    throw e;
   }
 }
 
 export async function* runFullPipelineStream(
   project: Project
 ): AsyncGenerator<SseEvent> {
-  let current = { ...project };
-
   // --- Step 1: Research (streams tokens) ---
   yield* streamStep(
     "research",
     RESEARCH_PROMPT,
-    `Product Idea: ${current.idea}`,
-    current,
-    (p, result) => {
-      current = updateProject(p.id, {
-        research: result as Project["research"],
-        status: "researching",
-      });
-    }
+    `Product Idea: ${project.idea}`
   );
 
   // --- Step 2: Stories (streams tokens) ---
   yield* streamStep(
     "stories",
     STORIES_PROMPT,
-    `Product Idea: ${current.idea}\n\nMarket Research Summary: ${current.research?.summary || "N/A"}`,
-    current,
-    (p, result) => {
-      current = updateProject(p.id, {
-        stories: result as Project["stories"],
-        status: "generating_stories",
-      });
-    }
+    `Product Idea: ${project.idea}\n\nResearch Summary: ${project.research?.summary || "N/A"}`
   );
 
   // --- Step 3: Wireframes (no streaming — spinner only) ---
   yield { type: "step_start_spinner", step: "wireframes" };
   try {
-    const wireframes = await wireframeAgent(current.stories!);
-    current = updateProject(current.id, {
-      wireframes,
-      status: "generating_wireframes",
-    });
-    yield { type: "step_end_spinner", step: "wireframes" };
+    const wireframes = await wireframeAgent(project.stories ?? []);
+    yield { type: "step_end_spinner", step: "wireframes", result: wireframes };
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    updateProject(current.id, { status: "error", error: msg });
     yield { type: "error", step: "wireframes", message: msg };
     return;
   }
@@ -206,29 +182,15 @@ export async function* runFullPipelineStream(
   yield* streamStep(
     "prd",
     PRD_PROMPT,
-    `Product Idea: ${current.idea}\n\nStories Count: ${current.stories?.length || 0}\nWireframes: ${current.wireframes?.map((w) => w.title).join(", ") || "N/A"}\nMarket Summary: ${current.research?.summary || "N/A"}`,
-    current,
-    (p, result) => {
-      current = updateProject(p.id, {
-        prd: result as Project["prd"],
-        status: "generating_prd",
-      });
-    }
+    `Product Idea: ${project.idea}\n\nStories Count: ${project.stories?.length || 0}\nWireframes: ${project.wireframes?.map((w: any) => w.title).join(", ") || "N/A"}\nMarket Summary: ${project.research?.summary || "N/A"}`
   );
 
   // --- Step 5: Roadmap (streams tokens) ---
   yield* streamStep(
     "roadmap",
     ROADMAP_PROMPT,
-    `User Stories:\n${current.stories?.map((s) => `[${s.id}][${s.priority}][${s.moscow}] ${s.epic}: ${s.story}`).join("\n") || "N/A"}`,
-    current,
-    (p, result) => {
-      current = updateProject(p.id, {
-        roadmap: result as Project["roadmap"],
-        status: "complete",
-      });
-    }
+    `User Stories:\n${project.stories?.map((s) => `[${s.id}][${s.priority}][${s.moscow}] ${s.epic}: ${s.story}`).join("\n") || "N/A"}`
   );
 
-  yield { type: "done", projectId: current.id };
+  yield { type: "done", projectId: project.id };
 }
