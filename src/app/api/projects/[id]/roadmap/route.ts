@@ -1,17 +1,23 @@
 import { NextResponse } from "next/server";
+import { getProject, updateProject } from "@/lib/store";
 import { roadmapAgent } from "@/lib/agents/roadmap-gen";
-import type { UserStory } from "@/lib/types";
 
-export async function POST(req: Request) {
+export async function POST(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const project = getProject(id);
+  if (!project || !project.stories) {
+    return NextResponse.json({ error: "Project or stories not found" }, { status: 400 });
+  }
   try {
-    const { stories } = await req.json();
-    if (!stories || !Array.isArray(stories)) {
-      return NextResponse.json({ error: "Stories array is required" }, { status: 400 });
-    }
-    const roadmap = await roadmapAgent(stories as UserStory[]);
-    return NextResponse.json({ roadmap });
+    updateProject(id, { status: "generating_roadmap" });
+    const roadmap = await roadmapAgent(project.stories);
+    const updated = updateProject(id, { roadmap });
+    return NextResponse.json(updated);
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    updateProject(id, { status: "error", error: String(e) });
+    return NextResponse.json({ error: String(e) }, { status: 500 });
   }
 }

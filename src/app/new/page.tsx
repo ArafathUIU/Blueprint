@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,11 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LiveStreamPanel, type StreamEntry } from "@/components/live-stream-panel";
 import { cn } from "@/lib/utils";
-import { createProject, saveProject } from "@/lib/store";
-import type { Project } from "@/lib/types";
 
 const ORDER = ["research", "stories", "wireframes", "prd", "roadmap"];
-
 const STEP_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
   research: { label: "Research", icon: "\u{1F50D}", color: "text-red-400" },
   stories: { label: "Stories", icon: "\u{1F4CB}", color: "text-amber-400" },
@@ -28,12 +25,15 @@ export default function NewProjectPage() {
   const [idea, setIdea] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [stepStates, setStepStates] = useState<Record<string, StepState>>({
-    research: "idle", stories: "idle", wireframes: "idle", prd: "idle", roadmap: "idle",
-  });
+  const [stepStates, setStepStates] = useState<Record<string, StepState>>({ research: "idle", stories: "idle", wireframes: "idle", prd: "idle", roadmap: "idle" });
   const [entries, setEntries] = useState<StreamEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState<string | null>(null);
+  const [currentStreamStep, setCurrentStreamStep] = useState<string | null>(null);
+  const streamTextRef = useRef<Record<string, string>>({});
+
+  const updateStep = useCallback((step: string, state: StepState) => {
+    setStepStates((prev) => ({ ...prev, [step]: state }));
+  }, []);
 
   async function handleGenerate() {
     if (!idea.trim()) return;
@@ -42,142 +42,55 @@ export default function NewProjectPage() {
     setEntries([]);
     setStepStates({ research: "idle", stories: "idle", wireframes: "idle", prd: "idle", roadmap: "idle" });
 
-    // Create project in localStorage
-    const project = createProject(idea.trim(), name.trim() || idea.trim().slice(0, 50));
-    saveProject(project);
-
-    // Accumulate results
-    const results: Partial<Project> = {};
-
     try {
-      // ── Research ──
-      setCurrentStep("research");
-      setStepStates((p) => ({ ...p, research: "running" }));
-      setEntries([{ type: "header", step: "research" }]);
-      try {
-        const res = await fetch(`/api/projects/${project.id}/research`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idea: project.idea }),
-        });
-        if (!res.ok) throw new Error((await res.json()).error || `Research failed (${res.status})`);
-        const data = await res.json();
-        results.research = data.research;
-        saveProject({ ...project, ...results });
-        setStepStates((p) => ({ ...p, research: "done" }));
-        setEntries((prev) => [...prev, { type: "done", step: "research" }]);
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : "Research failed";
-        setStepStates((p) => ({ ...p, research: "error" }));
-        setEntries((prev) => [...prev, { type: "error", step: "research", text: msg }]);
-        throw new Error(msg);
-      }
+      const createRes = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea: idea.trim(), name: name.trim() || idea.trim().slice(0, 50) }),
+      });
+      if (!createRes.ok) throw new Error((await createRes.json()).error || "Failed to create project");
+      const project = await createRes.json();
 
-      // ── Stories ──
-      setCurrentStep("stories");
-      setStepStates((p) => ({ ...p, stories: "running" }));
-      setEntries((prev) => [...prev, { type: "header", step: "stories" }]);
-      try {
-        const res = await fetch(`/api/projects/${project.id}/stories`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idea: project.idea, researchSummary: results.research?.summary || "" }),
-        });
-        if (!res.ok) throw new Error((await res.json()).error || `Stories failed (${res.status})`);
-        const data = await res.json();
-        results.stories = data.stories;
-        saveProject({ ...project, ...results });
-        setStepStates((p) => ({ ...p, stories: "done" }));
-        setEntries((prev) => [...prev, { type: "done", step: "stories" }]);
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : "Stories failed";
-        setStepStates((p) => ({ ...p, stories: "error" }));
-        setEntries((prev) => [...prev, { type: "error", step: "stories", text: msg }]);
-        throw new Error(msg);
-      }
+      const sseRes = await fetch(`/api/projects/${project.id}/pipeline/stream`, { method: "POST" });
+      if (!sseRes.ok) throw new Error(`Pipeline failed (${sseRes.status})`);
 
-      // ── Wireframes ──
-      setCurrentStep("wireframes");
-      setStepStates((p) => ({ ...p, wireframes: "running" }));
-      setEntries((prev) => [...prev, { type: "spinner", step: "wireframes" }]);
-      try {
-        const res = await fetch(`/api/projects/${project.id}/wireframes`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ stories: results.stories }),
-        });
-        if (!res.ok) throw new Error((await res.json()).error || `Wireframes failed (${res.status})`);
-        const data = await res.json();
-        results.wireframes = data.wireframes;
-        saveProject({ ...project, ...results });
-        setStepStates((p) => ({ ...p, wireframes: "done" }));
-        setEntries((prev) => prev.filter((e) => e.type !== "spinner").concat({ type: "done", step: "wireframes" }));
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : "Wireframes failed";
-        setStepStates((p) => ({ ...p, wireframes: "error" }));
-        setEntries((prev) => prev.filter((e) => e.type !== "spinner").concat({ type: "error", step: "wireframes", text: msg }));
-        throw new Error(msg);
-      }
+      const reader = sseRes.body?.getReader();
+      if (!reader) throw new Error("No SSE response body");
 
-      // ── PRD ──
-      setCurrentStep("prd");
-      setStepStates((p) => ({ ...p, prd: "running" }));
-      setEntries((prev) => [...prev, { type: "header", step: "prd" }]);
-      try {
-        const res = await fetch(`/api/projects/${project.id}/prd`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idea: project.idea, research: results.research, stories: results.stories, wireframes: results.wireframes }),
-        });
-        if (!res.ok) throw new Error((await res.json()).error || `PRD failed (${res.status})`);
-        const data = await res.json();
-        results.prd = data.prd;
-        saveProject({ ...project, ...results });
-        setStepStates((p) => ({ ...p, prd: "done" }));
-        setEntries((prev) => [...prev, { type: "done", step: "prd" }]);
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : "PRD failed";
-        setStepStates((p) => ({ ...p, prd: "error" }));
-        setEntries((prev) => [...prev, { type: "error", step: "prd", text: msg }]);
-        throw new Error(msg);
-      }
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-      // ── Roadmap ──
-      setCurrentStep("roadmap");
-      setStepStates((p) => ({ ...p, roadmap: "running" }));
-      setEntries((prev) => [...prev, { type: "header", step: "roadmap" }]);
-      try {
-        const res = await fetch(`/api/projects/${project.id}/roadmap`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ stories: results.stories }),
-        });
-        if (!res.ok) throw new Error((await res.json()).error || `Roadmap failed (${res.status})`);
-        const data = await res.json();
-        results.roadmap = data.roadmap;
-        const final: Project = { ...project, ...results, status: "complete" };
-        saveProject(final);
-        setStepStates((p) => ({ ...p, roadmap: "done" }));
-        setEntries((prev) => [...prev, { type: "done", step: "roadmap" }]);
-        setCurrentStep(null);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
-        setTimeout(() => router.push(`/projects/${project.id}`), 1000);
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : "Roadmap failed";
-        setStepStates((p) => ({ ...p, roadmap: "error" }));
-        setEntries((prev) => [...prev, { type: "error", step: "roadmap", text: msg }]);
-        setError(msg);
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            switch (event.type) {
+              case "step_start": { updateStep(event.step, "running"); setCurrentStreamStep(event.step); setEntries((p) => [...p, { type: "header", step: event.step }]); break; }
+              case "step_start_spinner": { updateStep(event.step, "running"); setCurrentStreamStep(event.step); setEntries((p) => [...p, { type: "spinner", step: event.step }]); break; }
+              case "token": {
+                const step = event.step; streamTextRef.current[step] = (streamTextRef.current[step] || "") + event.text;
+                setEntries((p) => { const f = p.filter((e) => !(e.type === "token" && e.step === step)); return [...f, { type: "token", step, text: streamTextRef.current[step] }]; });
+                break;
+              }
+              case "step_end": { updateStep(event.step, "done"); setEntries((p) => [...p, { type: "done", step: event.step }]); break; }
+              case "step_end_spinner": { updateStep(event.step, "done"); setEntries((p) => [...p.filter((e) => !(e.type === "spinner" && e.step === event.step)), { type: "done", step: event.step }]); break; }
+              case "error": { updateStep(event.step, "error"); setEntries((p) => [...p, { type: "error", step: event.step, text: event.message }]); setError(event.message); break; }
+              case "done": { setCurrentStreamStep(null); setTimeout(() => router.push(`/projects/${event.projectId}`), 1500); break; }
+            }
+          } catch { /* skip unparseable */ }
+        }
       }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Pipeline failed";
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : "Something went wrong"); } finally { setLoading(false); }
   }
 
   const completedCount = Object.values(stepStates).filter((s) => s === "done").length;
-  const allDone = completedCount === ORDER.length;
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)]">
@@ -195,7 +108,7 @@ export default function NewProjectPage() {
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="idea" className="text-white/50">Product Idea</Label>
-                <Textarea id="idea" placeholder="A mobile app that uses AI to generate personalized workout plans based on user biometrics and available equipment..." value={idea} onChange={(e) => setIdea(e.target.value)} className="min-h-36 resize-y border-white/10 bg-white/[0.04] text-white placeholder:text-white/20" />
+                <Textarea id="idea" placeholder="A mobile app that uses AI to generate personalized workout plans..." value={idea} onChange={(e) => setIdea(e.target.value)} className="min-h-36 resize-y border-white/10 bg-white/[0.04] text-white placeholder:text-white/20" />
               </div>
               <Button size="lg" className="w-full" onClick={handleGenerate} disabled={!idea.trim()}>Generate Product Blueprint</Button>
             </div>
@@ -206,10 +119,9 @@ export default function NewProjectPage() {
           <div className="flex flex-col items-center gap-8 pt-8">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
               {ORDER.map((step, i) => {
-                const config = STEP_CONFIG[step];
-                const state = stepStates[step];
+                const config = STEP_CONFIG[step]; const state = stepStates[step]; const isCurrent = currentStreamStep === step;
                 return (
-                  <div key={step} className={cn("flex flex-col items-center gap-1 transition-all", currentStep === step && "scale-110")}>
+                  <div key={step} className={cn("flex flex-col items-center gap-1 transition-all", isCurrent && "scale-110")}>
                     <div className={cn("flex h-9 w-9 items-center justify-center rounded-full text-sm transition-all", state === "idle" && "bg-white/5 text-white/20", state === "running" && "bg-white/5 text-white ring-1 ring-white/20 animate-pulse", state === "done" && "bg-red-600/30 text-red-300 ring-1 ring-red-500/50", state === "error" && "bg-red-900/30 text-red-400 ring-1 ring-red-500/50")}>
                       {state === "done" ? "\u2713" : state === "error" ? "\u2717" : config.icon}
                     </div>
@@ -218,12 +130,9 @@ export default function NewProjectPage() {
                 );
               })}
             </div>
-
             <LiveStreamPanel entries={entries} className="w-full border-white/[0.08] shadow-2xl shadow-black/60" />
-
             {error && <div className="w-full rounded-lg border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-300">{error}</div>}
-
-            {allDone && <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm text-white/60"><span className="inline-block h-2 w-2 rounded-full bg-green-400" />Opening your blueprint...</div>}
+            {completedCount === ORDER.length && <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm text-white/60"><span className="inline-block h-2 w-2 rounded-full bg-green-400" />Opening your blueprint...</div>}
           </div>
         )}
       </div>

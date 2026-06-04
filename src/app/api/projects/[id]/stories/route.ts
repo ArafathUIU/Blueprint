@@ -1,16 +1,24 @@
 import { NextResponse } from "next/server";
+import { getProject, updateProject } from "@/lib/store";
 import { storyAgent } from "@/lib/agents/story-gen";
 
-export async function POST(req: Request) {
+export async function POST(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const project = getProject(id);
+  if (!project || !project.research) {
+    return NextResponse.json({ error: "Project or research not found" }, { status: 400 });
+  }
   try {
-    const { idea, researchSummary } = await req.json();
-    if (!idea) {
-      return NextResponse.json({ error: "Idea is required" }, { status: 400 });
-    }
-    const stories = await storyAgent(idea, researchSummary || "");
-    return NextResponse.json({ stories });
+    updateProject(id, { status: "generating_stories" });
+    const stories = await storyAgent(project.idea, project.research.summary);
+    const updated = updateProject(id, { stories });
+    return NextResponse.json(updated);
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const errMsg = e instanceof Error ? e.message : String(e);
+    updateProject(id, { status: "error", error: errMsg });
+    return NextResponse.json({ error: errMsg }, { status: 500 });
   }
 }

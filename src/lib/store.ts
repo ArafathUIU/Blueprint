@@ -1,51 +1,53 @@
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlinkSync } from "fs";
+import { join } from "path";
 import { v4 as uuidv4 } from "uuid";
 import type { Project } from "./types";
 
-const STORAGE_KEY = "blueprint_projects";
+const DATA_DIR = process.env.DATA_DIR || "./data";
 
-function isBrowser() {
-  return typeof window !== "undefined";
-}
-
-function readAll(): Project[] {
-  if (!isBrowser()) return [];
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  } catch {
-    return [];
+function ensureDir(): string {
+  const dir = join(/* turbopackIgnore: true */ process.cwd(), DATA_DIR);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
   }
+  return dir;
 }
 
-function writeAll(projects: Project[]): void {
-  if (!isBrowser()) return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+function projectPath(id: string): string {
+  return join(ensureDir(), `${id}.json`);
 }
 
 export function listProjects(): Project[] {
-  return readAll().sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  );
+  const dir = ensureDir();
+  const files = readdirSync(dir).filter((f: string) => f.endsWith(".json"));
+  return files
+    .map((f: string) => {
+      const raw = readFileSync(join(dir, f), "utf-8");
+      return JSON.parse(raw) as Project;
+    })
+    .sort(
+      (a: Project, b: Project) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
 }
 
 export function getProject(id: string): Project | null {
-  return readAll().find((p) => p.id === id) ?? null;
+  const path = projectPath(id);
+  if (!existsSync(path)) return null;
+  return JSON.parse(readFileSync(path, "utf-8")) as Project;
 }
 
 export function saveProject(project: Project): void {
-  const projects = readAll();
   project.updatedAt = new Date().toISOString();
-  const idx = projects.findIndex((p) => p.id === project.id);
-  if (idx >= 0) projects[idx] = project;
-  else projects.push(project);
-  writeAll(projects);
+  writeFileSync(projectPath(project.id), JSON.stringify(project, null, 2), "utf-8");
 }
 
 export function createProject(idea: string, name: string): Project {
   const now = new Date().toISOString();
-  return {
+  const project: Project = {
     id: uuidv4(),
     idea,
-    name: name || idea.slice(0, 50),
+    name,
     status: "draft",
     createdAt: now,
     updatedAt: now,
@@ -56,20 +58,21 @@ export function createProject(idea: string, name: string): Project {
     roadmap: null,
     error: null,
   };
-}
-
-export function deleteProject(id: string): boolean {
-  const projects = readAll();
-  const filtered = projects.filter((p) => p.id !== id);
-  if (filtered.length === projects.length) return false;
-  writeAll(filtered);
-  return true;
+  saveProject(project);
+  return project;
 }
 
 export function updateProject(id: string, updates: Partial<Project>): Project {
   const project = getProject(id);
   if (!project) throw new Error(`Project ${id} not found`);
-  const updated = { ...project, ...updates } as Project;
+  const updated = { ...project, ...updates };
   saveProject(updated);
   return updated;
+}
+
+export function deleteProject(id: string): boolean {
+  const path = projectPath(id);
+  if (!existsSync(path)) return false;
+  unlinkSync(path);
+  return true;
 }

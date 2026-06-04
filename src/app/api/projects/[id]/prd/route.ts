@@ -1,22 +1,23 @@
 import { NextResponse } from "next/server";
+import { getProject, updateProject } from "@/lib/store";
 import { prdAgent } from "@/lib/agents/prd-gen";
-import type { MarketResearch, UserStory, Wireframe } from "@/lib/types";
 
-export async function POST(req: Request) {
+export async function POST(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const project = getProject(id);
+  if (!project?.research || !project?.stories || !project?.wireframes) {
+    return NextResponse.json({ error: "Research, stories, and wireframes required" }, { status: 400 });
+  }
   try {
-    const { idea, research, stories, wireframes } = await req.json();
-    if (!idea) {
-      return NextResponse.json({ error: "Idea is required" }, { status: 400 });
-    }
-    const prd = await prdAgent(
-      idea,
-      research as MarketResearch,
-      (stories || []) as UserStory[],
-      (wireframes || []) as Wireframe[]
-    );
-    return NextResponse.json({ prd });
+    updateProject(id, { status: "generating_prd" });
+    const prd = await prdAgent(project.idea, project.research, project.stories, project.wireframes);
+    const updated = updateProject(id, { prd });
+    return NextResponse.json(updated);
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    updateProject(id, { status: "error", error: String(e) });
+    return NextResponse.json({ error: String(e) }, { status: 500 });
   }
 }
