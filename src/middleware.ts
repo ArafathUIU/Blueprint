@@ -5,7 +5,7 @@ const WINDOW = 60_000; // 1 minute
 const MAX_REQUESTS = 10;
 const store = new Map<string, { count: number; resetAt: number }>();
 
-export function middleware(request: NextRequest) {
+export default function middleware(request: NextRequest) {
   // Only rate-limit API routes
   if (!request.nextUrl.pathname.startsWith("/api/")) return NextResponse.next();
   // Skip health check
