@@ -107,6 +107,8 @@ export default function Home() {
 
         {/* Terminal window */}
         <div className="relative z-10 w-full max-w-2xl">
+          {/* Terminal glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[400px] rounded-full bg-red-500/[0.04] blur-[100px] pointer-events-none" />
           {/* Window chrome */}
           <div className="flex items-center justify-between gap-1.5 rounded-t-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 backdrop-blur-sm">
             <div className="flex items-center gap-1.5">

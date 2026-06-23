@@ -127,7 +127,10 @@ export default function NewProjectPage() {
   const completedCount = Object.values(stepStates).filter((s) => s === "done").length;
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] flex flex-col items-center px-4 pt-10 pb-8">
+    <div className="relative min-h-[calc(100vh-3.5rem)] flex flex-col items-center px-4 pt-10 pb-8">
+      {/* Terminal glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full bg-red-500/[0.04] blur-[120px] pointer-events-none" />
+
       {/* Terminal Window */}
       <div className="relative z-10 w-full max-w-6xl">
         {/* Window Chrome */}

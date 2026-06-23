@@ -1,8 +1,17 @@
 import type { Metadata } from "next";
+import { JetBrains_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { NeuralBackground } from "@/components/neural-background";
+import { GridOverlay } from "@/components/grid-overlay";
+import { PageTransition } from "@/components/page-transition";
 import "./globals.css";
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -32,10 +41,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className="h-full antialiased"
+      className={`h-full antialiased ${jetbrainsMono.variable}`}
     >
       <body className="relative min-h-full flex flex-col bg-background text-foreground">
         <NeuralBackground />
+        <GridOverlay />
 
         <TooltipProvider>
           <header className="sticky top-0 z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
@@ -58,7 +68,7 @@ export default function RootLayout({
               </Link>
             </div>
           </header>
-          <main className="relative z-10 flex-1">{children}</main>
+          <main className="relative z-10 flex-1"><PageTransition>{children}</PageTransition></main>
           <footer className="relative z-10 border-t border-white/5 py-4 text-center">
             <Link href="/terms" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
               Terms & Privacy
