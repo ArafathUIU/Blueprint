@@ -2,10 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LiveStreamPanel, type StreamEntry } from "@/components/live-stream-panel";
 import { cn } from "@/lib/utils";
 
@@ -23,33 +19,60 @@ type StepState = "idle" | "running" | "done" | "error";
 
 export default function NewProjectPage() {
   const router = useRouter();
-  const [idea, setIdea] = useState("");
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState<"name" | "desc" | "running">("name");
+  const [projectName, setProjectName] = useState("");
+  const [description, setDescription] = useState("");
+  const [lineBuffer, setLineBuffer] = useState<{ prefix: string; text: string }[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const [stepStates, setStepStates] = useState<Record<string, StepState>>({ research: "idle", stories: "idle", wireframes: "idle", prd: "idle", roadmap: "idle" });
   const [entries, setEntries] = useState<StreamEntry[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
   const [currentStreamStep, setCurrentStreamStep] = useState<string | null>(null);
   const streamTextRef = useRef<Record<string, string>>({});
+
+  // Auto-scroll terminal
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [lineBuffer, entries]);
+
+  // Focus input on phase change
+  useEffect(() => {
+    if (phase === "name") inputRef.current?.focus();
+    if (phase === "desc") {
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus();
+      });
+    }
+  }, [phase]);
+
+  function handleNameSubmit() {
+    const name = projectName.trim();
+    if (!name) return;
+    setLineBuffer((p) => [...p, { prefix: ">", text: `new` }]);
+    setLineBuffer((p) => [...p, { prefix: "", text: `Project name: ${name}` }]);
+    setPhase("desc");
+  }
+
+  function handleDescSubmit() {
+    const desc = description.trim();
+    if (!desc || desc.length < 10) return;
+    setLineBuffer((p) => [...p, { prefix: "", text: `Description: ${desc}` }]);
+    setLineBuffer((p) => [...p, { prefix: "", text: "" }]);
+    setLineBuffer((p) => [...p, { prefix: ">", text: `blueprint --generate "${projectName.trim()}"` }]);
+    setLineBuffer((p) => [...p, { prefix: "", text: "booting agent runtime..." }]);
+    setPhase("running");
+    runPipeline(projectName.trim(), desc);
+  }
 
   const updateStep = useCallback((step: string, state: StepState) => {
     setStepStates((prev) => ({ ...prev, [step]: state }));
   }, []);
 
-  // Navigation guard — warn before leaving mid-generation
-  useEffect(() => {
-    if (!loading) return;
-    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [loading]);
-
-  async function handleGenerate() {
-    if (!idea.trim()) return;
-    if (idea.trim().length < 10) { setError("Please write at least 10 characters describing your idea."); return; }
-    if (idea.trim().length > MAX_IDEA_LENGTH) { setError(`Idea is too long. Please keep it under ${MAX_IDEA_LENGTH} characters.`); return; }
-    setLoading(true);
-    setError(null);
+  async function runPipeline(name: string, idea: string) {
+    setRunError(null);
     setEntries([]);
     setStepStates({ research: "idle", stories: "idle", wireframes: "idle", prd: "idle", roadmap: "idle" });
 
@@ -57,7 +80,7 @@ export default function NewProjectPage() {
       const createRes = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea: idea.trim(), name: name.trim() || idea.trim().slice(0, 50) }),
+        body: JSON.stringify({ idea, name }),
       });
       if (!createRes.ok) throw new Error((await createRes.json()).error || "Failed to create project");
       const project = await createRes.json();
@@ -92,66 +115,158 @@ export default function NewProjectPage() {
               }
               case "step_end": { updateStep(event.step, "done"); setEntries((p) => [...p, { type: "done", step: event.step }]); break; }
               case "step_end_spinner": { updateStep(event.step, "done"); setEntries((p) => [...p.filter((e) => !(e.type === "spinner" && e.step === event.step)), { type: "done", step: event.step }]); break; }
-              case "error": { updateStep(event.step, "error"); setEntries((p) => [...p, { type: "error", step: event.step, text: event.message }]); setError(event.message); break; }
+              case "error": { updateStep(event.step, "error"); setEntries((p) => [...p, { type: "error", step: event.step, text: event.message }]); setRunError(event.message); break; }
               case "done": { setCurrentStreamStep(null); setTimeout(() => router.push(`/projects/${event.projectId}`), 1500); break; }
             }
           } catch { /* skip unparseable */ }
         }
       }
-    } catch (e: unknown) { setError(e instanceof Error ? e.message : "Something went wrong"); } finally { setLoading(false); }
+    } catch (e: unknown) { setRunError(e instanceof Error ? e.message : "Something went wrong"); }
   }
 
   const completedCount = Object.values(stepStates).filter((s) => s === "done").length;
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)]">
-      <div className="mx-auto flex max-w-3xl flex-col gap-8 px-6 py-12">
-        {!loading && (
-          <>
-            <div className="flex flex-col gap-2 text-center">
-              <h1 className="text-3xl font-bold tracking-tight text-white">What product are you building?</h1>
-              <p className="text-white/40">Describe your idea. Blueprint will generate research, stories, wireframes, a PRD, and a roadmap.</p>
-            </div>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="name" className="text-white/50">Project Name <span className="text-white/20">(optional)</span></Label>
-                <Input id="name" placeholder="e.g. Fitness AI App" value={name} onChange={(e) => setName(e.target.value)} className="border-white/10 bg-white/[0.04] text-white placeholder:text-white/20" />
-                <p className="text-[10px] text-white/15">Used as the title for your blueprint. If left blank, the first few words of your idea become the project name.</p>
+    <div className="min-h-[calc(100vh-3.5rem)] flex flex-col items-center px-4 pt-10 pb-8">
+      {/* Terminal Window */}
+      <div className="relative z-10 w-full max-w-2xl">
+        {/* Window Chrome */}
+        <div className="flex items-center justify-between rounded-t-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 backdrop-blur-sm">
+          <div className="flex items-center gap-1.5">
+            <div className="h-2.5 w-2.5 rounded-full bg-[#FF5F57]" />
+            <div className="h-2.5 w-2.5 rounded-full bg-[#FFBD2E]" />
+            <div className="h-2.5 w-2.5 rounded-full bg-[#28C840]" />
+            <span className="ml-2 font-sans text-[10px] text-white/30 tracking-wider uppercase">
+              {projectName.trim() ? projectName.trim() : "blueprint"} — bash — 80×24
+            </span>
+          </div>
+        </div>
+
+        {/* Terminal Body */}
+        <div
+          ref={scrollRef}
+          className="rounded-b-xl border border-t-0 border-white/[0.08] bg-zinc-950/80 shadow-2xl shadow-black/60 ring-1 ring-white/[0.05] px-6 py-5 backdrop-blur-md max-h-[600px] overflow-y-auto font-mono text-[12px] leading-relaxed"
+        >
+          {/* ── PHASE 1: Project Name ── */}
+          {phase === "name" && (
+            <>
+              {lineBuffer.map((l, i) => (
+                <div key={i} className="flex">
+                  {l.prefix && <span className="mr-2 shrink-0 text-red-500/70">{l.prefix}</span>}
+                  <span className="text-white/80">{l.text}</span>
+                </div>
+              ))}
+              {lineBuffer.length === 0 && (
+                <div className="flex items-center gap-0 text-white/40 text-[11px] mb-2">
+                  <span className="mr-2 text-red-500/70">{">"}</span>
+                  <span>blueprint --new</span>
+                </div>
+              )}
+              <div className="flex items-center gap-0 mt-1">
+                {lineBuffer.length === 0 && <span className="mr-2 text-red-500/70">{">"}</span>}
+                <label className="shrink-0 text-green-400/80">project-name@blueprint:~$ </label>
+                <div className="relative flex-1">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleNameSubmit(); }}
+                    className="w-full bg-transparent text-white/90 outline-none caret-red-500"
+                    placeholder="my-project"
+                    autoFocus
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                </div>
+                <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-red-500/70" />
               </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="idea" className="text-white/50">Product Idea <span className="text-red-400">*</span></Label>
-                <Textarea id="idea" placeholder="Describe your product in 1-3 sentences. What does it do? Who is it for? What problem does it solve?&#10;&#10;Example: A mobile app that uses AI to generate personalized workout plans based on user biometrics and available equipment. Targets fitness beginners who don't know where to start." value={idea} onChange={(e) => setIdea(e.target.value)} className="min-h-36 resize-y border-white/10 bg-white/[0.04] text-white placeholder:text-white/20" />
-                <div className="flex justify-between text-[10px]">
-                  <span className="text-white/20">Minimum 10 characters</span>
-                  <span className={idea.length > MAX_IDEA_LENGTH ? "text-red-400" : "text-white/20"}>{idea.length}/{MAX_IDEA_LENGTH}</span>
+            </>
+          )}
+
+          {/* ── PHASE 2: Description ── */}
+          {phase === "desc" && (
+            <>
+              {lineBuffer.map((l, i) => (
+                <div key={i} className="flex">
+                  {l.prefix && <span className="mr-2 shrink-0 text-red-500/70">{l.prefix}</span>}
+                  <span className="text-white/80">{l.text}</span>
+                </div>
+              ))}
+              <div className="flex items-start gap-0 mt-1">
+                <label className="shrink-0 text-green-400/80">project-name@blueprint:~$ </label>
+                <div className="relative flex-1">
+                  <textarea
+                    ref={textareaRef}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleDescSubmit();
+                      }
+                    }}
+                    className="w-full bg-transparent text-white/90 outline-none caret-red-500 resize-none"
+                    rows={3}
+                    placeholder="Describe your product idea..."
+                    autoFocus
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                </div>
+                <span className="ml-0.5 mt-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-red-500/70" />
+              </div>
+              <div className="mt-2 text-[10px] text-white/20 flex justify-between">
+                <span>Enter to submit · Shift+Enter for new line · Min 10 characters</span>
+                <span className={description.length > MAX_IDEA_LENGTH ? "text-red-400" : "text-white/20"}>{description.length}/{MAX_IDEA_LENGTH}</span>
+              </div>
+            </>
+          )}
+
+          {/* ── PHASE 3: Pipeline Running ── */}
+          {phase === "running" && (
+            <>
+              {lineBuffer.map((l, i) => (
+                <div key={i} className="flex">
+                  {l.prefix && <span className="mr-2 shrink-0 text-red-500/70">{l.prefix}</span>}
+                  <span className="text-white/80">{l.text}</span>
+                </div>
+              ))}
+
+              <div className="mt-4 mb-3">
+                <div className="flex flex-wrap items-center justify-start gap-2 sm:gap-3">
+                  {ORDER.map((step) => {
+                    const config = STEP_CONFIG[step]; const state = stepStates[step]; const isCurrent = currentStreamStep === step;
+                    return (
+                      <div key={step} className={cn("flex items-center gap-1.5 transition-all", isCurrent && "scale-105")}>
+                        <div className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[11px] transition-all", state === "idle" && "bg-white/5 text-white/20", state === "running" && "bg-white/5 text-white ring-1 ring-white/20 animate-pulse", state === "done" && "bg-red-600/20 text-red-300 ring-1 ring-red-500/40", state === "error" && "bg-red-900/30 text-red-400 ring-1 ring-red-500/50")}>
+                          {state === "done" ? "\u2713" : state === "error" ? "\u2717" : config.icon}
+                        </div>
+                        <span className={cn("text-[10px] font-medium whitespace-nowrap", state === "idle" && "text-white/15", state === "running" && "text-white/60", state === "done" && "text-white/80", state === "error" && "text-red-400")}>{config.label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-              <Button size="lg" className="w-full" onClick={handleGenerate} disabled={!idea.trim()}>Generate Product Blueprint</Button>
-            </div>
-          </>
-        )}
 
-        {loading && (
-          <div className="flex flex-col items-center gap-8 pt-8">
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
-              {ORDER.map((step, i) => {
-                const config = STEP_CONFIG[step]; const state = stepStates[step]; const isCurrent = currentStreamStep === step;
-                return (
-                  <div key={step} className={cn("flex flex-col items-center gap-1 transition-all", isCurrent && "scale-110")}>
-                    <div className={cn("flex h-9 w-9 items-center justify-center rounded-full text-sm transition-all", state === "idle" && "bg-white/5 text-white/20", state === "running" && "bg-white/5 text-white ring-1 ring-white/20 animate-pulse", state === "done" && "bg-red-600/30 text-red-300 ring-1 ring-red-500/50", state === "error" && "bg-red-900/30 text-red-400 ring-1 ring-red-500/50")}>
-                      {state === "done" ? "\u2713" : state === "error" ? "\u2717" : config.icon}
-                    </div>
-                    <span className={cn("text-[10px] font-medium whitespace-nowrap hidden sm:block", state === "idle" && "text-white/15", state === "running" && "text-white/60", state === "done" && "text-white/80", state === "error" && "text-red-400")}>{config.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <LiveStreamPanel entries={entries} className="w-full border-white/[0.08] shadow-2xl shadow-black/60" />
-            <p className="text-[10px] text-white/15">Estimated time: 4–7 minutes. The agent is analyzing, generating stories, designing wireframes, and assembling your PRD and roadmap.</p>
-            {error && <div className="w-full rounded-lg border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-300">{error}</div>}
-            {completedCount === ORDER.length && <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm text-white/60"><span className="inline-block h-2 w-2 rounded-full bg-green-400" />Opening your blueprint...</div>}
-          </div>
-        )}
+              <LiveStreamPanel entries={entries} className="w-full border-white/[0.06] shadow-lg shadow-black/40" />
+
+              {runError && (
+                <div className="mt-4 font-sans text-[11px] text-red-400 bg-red-950/20 border border-red-500/20 rounded px-3 py-2">
+                  {"> "}error: {runError}
+                </div>
+              )}
+
+              {completedCount === ORDER.length && (
+                <div className="mt-4 flex items-center gap-2 text-[11px] text-green-400/80">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
+                  pipeline complete. opening blueprint...
+                  <span className="inline-block h-3.5 w-1.5 animate-pulse bg-green-400/70" />
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
