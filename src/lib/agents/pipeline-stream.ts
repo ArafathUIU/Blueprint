@@ -3,16 +3,17 @@ import { streamAgent } from "../ai";
 import { wireframeAgent } from "./wireframe-gen";
 import { updateProject } from "../store";
 
-// System prompts — encourage thinking out loud before structured output
-const RESEARCH_PROMPT = `You are an expert market research analyst. Think step-by-step out loud as you analyze the product idea naturally, like you're talking to yourself while working. Show your reasoning about the market, competitors, personas, and viability. After your analysis, output the final result as JSON in a code block.
+// System prompts — use <thought> for reasoning, <result> for structured JSON output
+const RESEARCH_PROMPT = `You are an expert market research analyst. Before doing ANY task, emit your reasoning process using this exact format:
 
-Example thinking style:
-"ok, let me analyze this... the market for AI fitness apps has been growing rapidly since 2024. TAM is probably around $4-5B given the global wellness market. for SAM i need to narrow to mobile-first AI fitness specifically... that's likely $700-900M. this is a strong category but execution-heavy."
+<thought>your internal reasoning here — analyze the product idea, market sizing logic, competitor landscape, persona analysis, viability assessment. Be verbose. Show your actual reasoning process.</thought>
 
-JSON format (output after your thinking):
-\`\`\`json
+Then emit the final result:
+<result>{ your JSON here }</result>
+
+The <result> must be valid JSON matching this schema:
 {
-  "tam": "Total Addressable Market estimate with source",
+  "tam": "Total Addressable Market estimate with source and year",
   "sam": "Serviceable Addressable Market estimate",
   "som": "Serviceable Obtainable Market estimate (Year 1 target)",
   "trends": ["Key market trend 1", "Key market trend 2", "Key market trend 3"],
@@ -25,42 +26,38 @@ JSON format (output after your thinking):
   "viabilityScore": 0-100,
   "summary": "2-3 sentence executive summary of findings",
   "sources": [
-    { "title": "Source title (e.g. Grand View Research - Digital Health Market 2025)", "url": "https://example.com/report" }
+    { "title": "Source title with publication and year", "url": "https://example.com/report" }
   ]
 }
-\`\`\`
 
-Provide realistic, well-researched estimates. Include 4-6 real competitors and 3-4 personas. Be specific with numbers. Base on actual market data. Include 3-5 credible sources with URLs for your data points.`;
+Provide realistic, well-researched estimates. Include 4-6 real competitors and 3-4 personas. Be specific with numbers. Include 3-5 credible sources with URLs.`;
 
-const STORIES_PROMPT = `You are an expert product manager writing agile user stories. Think out loud as you analyze personas, define epics, and draft each story. Show your reasoning process naturally. After your thinking, output the stories as a JSON array in a code block.
+const STORIES_PROMPT = `You are an expert product manager writing agile user stories. Before doing ANY task, emit your reasoning process using this exact format:
 
-Example thinking:
-"alright, based on the research, my personas are: fitness beginner (wants guidance), gym regular (wants optimization), personal trainer (wants client tools). let me structure epics... onboard & profile is a Must epic since users need biometric input first. core workout engine is the product's heart — P0. progress tracking is P1 since it drives retention..."
+<thought>your internal reasoning here — analyze the personas from the research, define epics and themes, prioritize by MoSCoW, draft each story, think about dependencies and coverage. Show your actual reasoning.</thought>
 
-JSON format:
-\`\`\`json
-[{ "id": "US-001", "epic": "Epic name", "story": "As a [persona], I want [feature] so that [benefit]", "acceptanceCriteria": ["AC 1", "AC 2"], "priority": "P0|P1|P2", "moscow": "Must|Should|Could|Wont" }]
-\`\`\`
+Then emit the final result:
+<result>[ { "id": "US-001", "epic": "Epic name", "story": "As a [persona], I want [feature] so that [benefit]", "acceptanceCriteria": ["AC 1", "AC 2"], "priority": "P0|P1|P2", "moscow": "Must|Should|Could|Wont" } ]</result>
 
-Create 10-15 stories across 3-5 epics. At least 3 P0/Must. Map to real personas from the research.`;
+The <result> must be a valid JSON array. Create 10-15 stories across 3-5 epics. At least 3 P0/Must. Map to real personas from the research. Be specific in acceptance criteria.`;
 
-const PRD_PROMPT = `You are an expert technical product manager writing a PRD. Think out loud as you review all inputs (idea, research, stories, wireframes), define the problem, set goals, identify risks, and structure the document. Show your natural reasoning. Then output the PRD as JSON in a code block.
+const PRD_PROMPT = `You are an expert technical product manager writing a PRD. Before doing ANY task, emit your reasoning process using this exact format:
 
-JSON format:
-\`\`\`json
-{ "problemStatement": "...", "goals": [{"goal":"...", "metric":"...", "target":"..."}], "targetUsers": ["..."], "keyFeatures": [{"feature":"...", "description":"...", "priority":"P0|P1|P2"}], "technicalArchitecture": "...", "successMetrics": [{"metric":"...", "baseline":"...", "target":"..."}], "risks": [{"risk":"...", "likelihood":"Low|Medium|High", "impact":"Low|Medium|High", "mitigation":"..."}], "dependencies": ["..."], "sources": [{"title":"...", "url":"https://..."}] }
-\`\`\`
+<thought>your internal reasoning here — review the product idea, research findings, user stories, and wireframes. Define the problem, set measurable goals, identify key features, propose technical architecture, define success metrics, assess risks, and note dependencies. Show your actual reasoning.</thought>
 
-Base everything on the provided context. Be specific and data-driven. Include 3-5 credible sources with URLs for technical references, market data, or architectural decisions.`;
+Then emit the final result:
+<result>{ "problemStatement": "...", "goals": [{"goal":"...", "metric":"...", "target":"..."}], "targetUsers": ["..."], "keyFeatures": [{"feature":"...", "description":"...", "priority":"P0|P1|P2"}], "technicalArchitecture": "...", "successMetrics": [{"metric":"...", "baseline":"...", "target":"..."}], "risks": [{"risk":"...", "likelihood":"Low|Medium|High", "impact":"Low|Medium|High", "mitigation":"..."}], "dependencies": ["..."], "sources": [{"title":"...", "url":"https://..."}] }</result>
 
-const ROADMAP_PROMPT = `You are an expert technical project manager building a roadmap. Think out loud as you review the prioritized stories, define phases, estimate effort, and assign stories to each phase. Show your planning reasoning naturally. Then output the roadmap as a JSON array in a code block.
+The <result> must be valid JSON. Base everything on the provided context. Be specific and data-driven. Include 3-5 credible sources with URLs.`;
 
-JSON format:
-\`\`\`json
-[{ "phase": "Phase name", "timeline": "Weeks X-Y", "deliverables": ["..."], "stories": ["US-XXX"] }]
-\`\`\`
+const ROADMAP_PROMPT = `You are an expert technical project manager building a roadmap. Before doing ANY task, emit your reasoning process using this exact format:
 
-Phase 1 must be MVP with P0/Must stories only. Create 3-4 phases with 3-5 deliverables each. All stories must be assigned. Timeline should be realistic (4-6 weeks per phase).`;
+<thought>your internal reasoning here — review the prioritized user stories, define development phases, estimate effort and timelines, assign stories to each phase, think about dependencies between phases. Show your actual planning reasoning.</thought>
+
+Then emit the final result:
+<result>[ { "phase": "Phase name", "timeline": "Weeks X-Y", "deliverables": ["..."], "stories": ["US-XXX"] } ]</result>
+
+The <result> must be a valid JSON array. Phase 1 must be MVP with P0/Must stories only. Create 3-4 phases with 3-5 deliverables each. All stories must be assigned. Timeline should be realistic (4-6 weeks per phase).`;
 
 // SSE event types
 export interface SseStepStart {
@@ -113,15 +110,28 @@ export type SseEvent =
   | SseDone;
 
 function parseJson<T>(text: string, label: string): { result: T; thinkingText: string } {
-  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const jsonStr = jsonMatch ? jsonMatch[1].trim() : text.trim();
-  const thinkingText = jsonMatch ? text.slice(0, text.indexOf("```")).trim() : "";
+  const resultMatch = text.match(/<result>\s*([\s\S]*?)\s*<\/result>/);
+  const thoughtMatch = text.match(/<thought>\s*([\s\S]*?)\s*<\/thought>/);
+
+  let jsonStr: string;
+  let thinkingText: string;
+
+  if (resultMatch) {
+    jsonStr = resultMatch[1].trim();
+    thinkingText = thoughtMatch ? thoughtMatch[1].trim() : "";
+  } else {
+    // Fallback: try ```json code block
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    jsonStr = jsonMatch ? jsonMatch[1].trim() : text.trim();
+    thinkingText = jsonMatch ? text.slice(0, text.indexOf("```")).trim() : "";
+  }
+
   try {
     return { result: JSON.parse(jsonStr) as T, thinkingText };
   } catch {
     const bracketMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
     if (bracketMatch) {
-      return { result: JSON.parse(bracketMatch[0]) as T, thinkingText: text.slice(0, text.indexOf(bracketMatch[0])).trim() };
+      return { result: JSON.parse(bracketMatch[0]) as T, thinkingText: "" };
     }
     throw new Error(`Failed to parse ${label} as JSON. Response: ${text.slice(0, 300)}`);
   }
