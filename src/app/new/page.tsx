@@ -146,6 +146,10 @@ export default function NewProjectPage() {
         <div
           ref={scrollRef}
           className="rounded-b-xl border border-t-0 border-white/[0.08] bg-zinc-950/80 shadow-2xl shadow-black/60 ring-1 ring-white/[0.05] px-6 py-5 backdrop-blur-md min-h-[680px] overflow-y-auto font-mono text-[12px] leading-relaxed"
+          style={{
+            maskImage: "linear-gradient(to bottom, black calc(100% - 40px), transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black calc(100% - 40px), transparent 100%)",
+          }}
         >
           {/* ── PHASE 1: Project Name ── */}
           {phase === "name" && (

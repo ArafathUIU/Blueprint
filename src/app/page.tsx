@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { TerminalTypewriter } from "@/components/terminal-typewriter";
 import {
@@ -78,6 +78,7 @@ const HOW_IT_WORKS = [
 export default function Home() {
   const [heroReady, setHeroReady] = useState(false);
   const [showCTA, setShowCTA] = useState(false);
+  const ctaTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Show headline after 2.5s — before terminal finishes
   useEffect(() => {
@@ -85,9 +86,18 @@ export default function Home() {
     return () => clearTimeout(t);
   }, []);
 
-  // Show CTA when terminal completes or after ~8s
+  // Cleanup CTA timer on unmount
+  useEffect(() => {
+    return () => {
+      if (ctaTimerRef.current) clearTimeout(ctaTimerRef.current);
+    };
+  }, []);
+
+  // Show CTA when terminal completes
   function handleTerminalDone() {
-    if (!showCTA) setTimeout(() => setShowCTA(true), 600);
+    if (!showCTA) {
+      ctaTimerRef.current = setTimeout(() => setShowCTA(true), 600);
+    }
   }
 
   return (

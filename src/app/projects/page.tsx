@@ -44,7 +44,7 @@ export default function ProjectsListPage() {
                 <h3 className="font-semibold text-white group-hover:text-red-400 transition-colors line-clamp-1">{p.name}</h3>
                 <div className="flex items-center gap-1">
                   <DeleteButton projectId={p.id} projectName={p.name} />
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[p.status] || "bg-zinc-700 text-zinc-300"}`}>{STATUS_LABELS[p.status] || p.status}</span>
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[p.status] || "bg-zinc-700 text-white"}`}>{STATUS_LABELS[p.status] || p.status}</span>
                 </div>
               </div>
               <p className="text-xs text-zinc-500 line-clamp-2 mb-3">{p.idea}</p>

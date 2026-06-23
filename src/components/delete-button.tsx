@@ -12,20 +12,25 @@ interface DeleteButtonProps {
 export function DeleteButton({ projectId, projectName, redirectTo }: DeleteButtonProps) {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function handleDelete() {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
-      if (res.ok) {
-        if (redirectTo) {
-          router.push(redirectTo);
-        } else {
-          router.refresh();
-        }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: "Delete failed" }));
+        throw new Error(data.error || `Delete failed (${res.status})`);
       }
-    } catch {
+      if (redirectTo) {
+        router.push(redirectTo);
+      } else {
+        router.refresh();
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Delete failed");
       setLoading(false);
       setConfirming(false);
     }
@@ -34,20 +39,26 @@ export function DeleteButton({ projectId, projectName, redirectTo }: DeleteButto
   if (confirming) {
     return (
       <div className="flex items-center gap-1">
-        <span className="text-[10px] text-zinc-500">Delete?</span>
-        <button
-          onClick={handleDelete}
-          disabled={loading}
-          className="rounded bg-red-600 px-2 py-0.5 text-[10px] font-medium text-white hover:bg-red-500 disabled:opacity-50"
-        >
-          {loading ? "..." : "Yes"}
-        </button>
-        <button
-          onClick={() => setConfirming(false)}
-          className="rounded bg-zinc-800 px-2 py-0.5 text-[10px] text-zinc-400 hover:text-white"
-        >
-          No
-        </button>
+        {error ? (
+          <span className="text-[10px] text-red-400" title={error}>Failed</span>
+        ) : (
+          <>
+            <span className="text-[10px] text-zinc-500">Delete?</span>
+            <button
+              onClick={handleDelete}
+              disabled={loading}
+              className="rounded bg-red-600 px-2 py-0.5 text-[10px] font-medium text-white hover:bg-red-500 disabled:opacity-50"
+            >
+              {loading ? "..." : "Yes"}
+            </button>
+            <button
+              onClick={() => setConfirming(false)}
+              className="rounded bg-zinc-800 px-2 py-0.5 text-[10px] text-zinc-400 hover:text-white"
+            >
+              No
+            </button>
+          </>
+        )}
       </div>
     );
   }

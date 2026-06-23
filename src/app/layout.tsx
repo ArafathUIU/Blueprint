@@ -46,13 +46,13 @@ export default function RootLayout({
                 </span>
                 <span className="mt-0.5 h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
               </Link>
-              <Link href="/projects" className="text-sm font-medium text-zinc-400 transition-colors hover:text-white" aria-label="View all projects">
+              <Link href="/projects" className="text-sm font-medium text-zinc-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:rounded" aria-label="View all projects">
                 Projects
               </Link>
               <div className="flex-1" />
               <Link
                 href="/new"
-                className="inline-flex h-9 items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-medium text-white transition-colors hover:bg-red-500"
+                className="inline-flex h-9 items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-medium text-white transition-colors hover:bg-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 New Blueprint
               </Link>
