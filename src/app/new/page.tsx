@@ -129,7 +129,7 @@ export default function NewProjectPage() {
   return (
     <div className="min-h-[calc(100vh-3.5rem)] flex flex-col items-center px-4 pt-10 pb-8">
       {/* Terminal Window */}
-      <div className="relative z-10 w-full max-w-2xl">
+      <div className="relative z-10 w-full max-w-4xl">
         {/* Window Chrome */}
         <div className="flex items-center justify-between rounded-t-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 backdrop-blur-sm">
           <div className="flex items-center gap-1.5">
@@ -145,7 +145,7 @@ export default function NewProjectPage() {
         {/* Terminal Body */}
         <div
           ref={scrollRef}
-          className="rounded-b-xl border border-t-0 border-white/[0.08] bg-zinc-950/80 shadow-2xl shadow-black/60 ring-1 ring-white/[0.05] px-6 py-5 backdrop-blur-md max-h-[600px] overflow-y-auto font-mono text-[12px] leading-relaxed"
+          className="rounded-b-xl border border-t-0 border-white/[0.08] bg-zinc-950/80 shadow-2xl shadow-black/60 ring-1 ring-white/[0.05] px-6 py-5 backdrop-blur-md min-h-[600px] overflow-y-auto font-mono text-[12px] leading-relaxed"
         >
           {/* ── PHASE 1: Project Name ── */}
           {phase === "name" && (

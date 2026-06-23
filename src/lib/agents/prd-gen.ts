@@ -36,14 +36,18 @@ const SYSTEM_PROMPT = `You are an expert technical product manager who writes pr
       "mitigation": "How to mitigate"
     }
   ],
-  "dependencies": ["Dependency 1", "Dependency 2"]
+  "dependencies": ["Dependency 1", "Dependency 2"],
+  "sources": [
+    { "title": "Source title", "url": "https://example.com/source" }
+  ]
 }
 
 Rules:
 - Base everything on the provided research and stories
 - Include 4-6 goals, 5-8 features, 4-6 success metrics, 4-6 risks
 - Architecture should be realistic and modern
-- Be specific and data-driven`;
+- Be specific and data-driven
+- Include 3-5 credible sources with URLs for technical references`;
 
 export async function prdAgent(
   idea: string,

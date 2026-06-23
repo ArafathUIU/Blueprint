@@ -3,6 +3,7 @@ import { getProject } from "@/lib/store";
 import { ExportButtons } from "@/components/export-buttons";
 import { DeleteButton } from "@/components/delete-button";
 import { WireframeWithChat } from "@/components/wireframe-with-chat";
+import { ThinkingBlock } from "@/components/thinking-block";
 import type { UserStory } from "@/lib/types";
 
 export default async function ProjectPage({
@@ -52,6 +53,8 @@ export default async function ProjectPage({
         <section className="mb-8">
           <h2 className="mb-1 text-xl font-bold text-red-500">Market Research</h2>
           <p className="mb-5 font-mono text-xs text-zinc-500">Viability Score: {project.research.viabilityScore}/100</p>
+
+          {project.rawAnalysis?.research && <ThinkingBlock label="Agent Analysis" text={project.rawAnalysis.research} accent="red" />}
 
           <div className="grid gap-4 sm:grid-cols-4 mb-5">
             <StatCard accent="red" label="TAM" value={project.research.tam} />
@@ -103,6 +106,20 @@ export default async function ProjectPage({
               </div>
             </div>
           )}
+
+          {project.research.sources && project.research.sources.length > 0 && (
+            <div className="mt-5">
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-red-400">Sources</h4>
+              <div className="flex flex-wrap gap-2">
+                {project.research.sources.map((s, i) => (
+                  <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 border border-zinc-700 px-3 py-1.5 text-[11px] text-zinc-300 hover:border-red-500/50 hover:text-red-300 transition-colors">
+                    <svg className="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                    {s.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       )}
 
@@ -113,6 +130,8 @@ export default async function ProjectPage({
           <p className="mb-5 font-mono text-xs text-zinc-500">
             {project.stories.length} stories · {project.stories.filter(s => s.priority === "P0").length} P0 · {project.stories.filter(s => s.moscow === "Must").length} Must
           </p>
+
+          {project.rawAnalysis?.stories && <ThinkingBlock label="Agent Analysis" text={project.rawAnalysis.stories} accent="amber" />}
 
           <div className="grid gap-3">
             {project.stories.map((story) => {
@@ -165,6 +184,8 @@ export default async function ProjectPage({
         <section className="mb-8">
           <h2 className="mb-1 text-xl font-bold text-green-500">PRD</h2>
 
+          {project.rawAnalysis?.prd && <ThinkingBlock label="Agent Analysis" text={project.rawAnalysis.prd} accent="green" />}
+
           <div className="mt-5 space-y-5">
             <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-5">
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-green-400">Problem Statement</h4>
@@ -215,6 +236,20 @@ export default async function ProjectPage({
               </div>
             )}
           </div>
+
+          {project.prd.sources && project.prd.sources.length > 0 && (
+            <div className="mt-5">
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-green-400">Sources</h4>
+              <div className="flex flex-wrap gap-2">
+                {project.prd.sources.map((s, i) => (
+                  <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 border border-zinc-700 px-3 py-1.5 text-[11px] text-zinc-300 hover:border-green-500/50 hover:text-green-300 transition-colors">
+                    <svg className="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                    {s.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       )}
 
@@ -223,6 +258,8 @@ export default async function ProjectPage({
         <section className="mb-8">
           <h2 className="mb-1 text-xl font-bold text-cyan-500">Development Roadmap</h2>
           <p className="mb-5 font-mono text-xs text-zinc-500">{project.roadmap.length} phases</p>
+
+          {project.rawAnalysis?.roadmap && <ThinkingBlock label="Agent Analysis" text={project.rawAnalysis.roadmap} accent="cyan" />}
 
           <div className="space-y-4">
             {project.roadmap.map((phase, i) => (

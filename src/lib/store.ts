@@ -56,6 +56,7 @@ export function createProject(idea: string, name: string): Project {
     wireframes: null,
     prd: null,
     roadmap: null,
+    rawAnalysis: null,
     error: null,
   };
   saveProject(project);

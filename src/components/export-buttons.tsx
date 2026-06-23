@@ -33,6 +33,13 @@ function generateMarkdown(project: Project): string {
       });
       md += `\n`;
     }
+    if (project.research.sources && project.research.sources.length > 0) {
+      md += `### Sources\n\n`;
+      project.research.sources.forEach((s) => {
+        md += `- [${s.title}](${s.url})\n`;
+      });
+      md += `\n`;
+    }
   }
 
   if (project.stories && project.stories.length > 0) {
@@ -69,6 +76,13 @@ function generateMarkdown(project: Project): string {
       md += `### Risks\n\n| Risk | Likelihood | Impact | Mitigation |\n|------|------------|--------|------------|\n`;
       project.prd.risks.forEach((r) => {
         md += `| ${r.risk} | ${r.likelihood} | ${r.impact} | ${r.mitigation} |\n`;
+      });
+      md += `\n`;
+    }
+    if (project.prd.sources && project.prd.sources.length > 0) {
+      md += `### Sources\n\n`;
+      project.prd.sources.forEach((s) => {
+        md += `- [${s.title}](${s.url})\n`;
       });
       md += `\n`;
     }

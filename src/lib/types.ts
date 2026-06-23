@@ -8,6 +8,11 @@ export type ProjectStatus =
   | "complete"
   | "error";
 
+export interface Source {
+  title: string;
+  url: string;
+}
+
 export interface MarketResearch {
   tam: string;
   sam: string;
@@ -17,6 +22,7 @@ export interface MarketResearch {
   personas: Persona[];
   viabilityScore: number;
   summary: string;
+  sources: Source[];
 }
 
 export interface Competitor {
@@ -59,6 +65,7 @@ export interface PRD {
   successMetrics: { metric: string; baseline: string; target: string }[];
   risks: { risk: string; likelihood: string; impact: string; mitigation: string }[];
   dependencies: string[];
+  sources: Source[];
 }
 
 export interface RoadmapPhase {
@@ -81,4 +88,5 @@ export interface Project {
   prd: PRD | null;
   roadmap: RoadmapPhase[] | null;
   error: string | null;
+  rawAnalysis: Record<string, string> | null;
 }

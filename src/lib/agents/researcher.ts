@@ -27,7 +27,11 @@ const SYSTEM_PROMPT = `You are an expert market research analyst. Given a produc
   "summary": "2-3 sentence executive summary of findings"
 }
 
-Provide realistic, well-researched estimates. Include 4-6 competitors and 3-4 personas. Be specific with numbers. Base your analysis on real market data where possible.`;
+  "sources": [
+    { "title": "Source title (e.g. Grand View Research - Digital Health Market 2025)", "url": "https://example.com/report" }
+  ]
+
+Provide realistic, well-researched estimates. Include 4-6 real competitors and 3-4 personas. Be specific with numbers. Base on actual market data. Include 3-5 credible sources with URLs for your data points.`;
 
 export async function researchAgent(idea: string): Promise<MarketResearch> {
   return runAgentStructured<MarketResearch>({

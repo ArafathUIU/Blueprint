@@ -23,11 +23,14 @@ JSON format (output after your thinking):
     { "name": "Persona name/role", "painPoint": "Their main pain point", "willingnessToPay": "High/Medium/Low with price range" }
   ],
   "viabilityScore": 0-100,
-  "summary": "2-3 sentence executive summary of findings"
+  "summary": "2-3 sentence executive summary of findings",
+  "sources": [
+    { "title": "Source title (e.g. Grand View Research - Digital Health Market 2025)", "url": "https://example.com/report" }
+  ]
 }
 \`\`\`
 
-Provide realistic, well-researched estimates. Include 4-6 real competitors and 3-4 personas. Be specific with numbers. Base on actual market data.`;
+Provide realistic, well-researched estimates. Include 4-6 real competitors and 3-4 personas. Be specific with numbers. Base on actual market data. Include 3-5 credible sources with URLs for your data points.`;
 
 const STORIES_PROMPT = `You are an expert product manager writing agile user stories. Think out loud as you analyze personas, define epics, and draft each story. Show your reasoning process naturally. After your thinking, output the stories as a JSON array in a code block.
 
@@ -45,10 +48,10 @@ const PRD_PROMPT = `You are an expert technical product manager writing a PRD. T
 
 JSON format:
 \`\`\`json
-{ "problemStatement": "...", "goals": [{"goal":"...", "metric":"...", "target":"..."}], "targetUsers": ["..."], "keyFeatures": [{"feature":"...", "description":"...", "priority":"P0|P1|P2"}], "technicalArchitecture": "...", "successMetrics": [{"metric":"...", "baseline":"...", "target":"..."}], "risks": [{"risk":"...", "likelihood":"Low|Medium|High", "impact":"Low|Medium|High", "mitigation":"..."}], "dependencies": ["..."] }
+{ "problemStatement": "...", "goals": [{"goal":"...", "metric":"...", "target":"..."}], "targetUsers": ["..."], "keyFeatures": [{"feature":"...", "description":"...", "priority":"P0|P1|P2"}], "technicalArchitecture": "...", "successMetrics": [{"metric":"...", "baseline":"...", "target":"..."}], "risks": [{"risk":"...", "likelihood":"Low|Medium|High", "impact":"Low|Medium|High", "mitigation":"..."}], "dependencies": ["..."], "sources": [{"title":"...", "url":"https://..."}] }
 \`\`\`
 
-Base everything on the provided context. Be specific and data-driven.`;
+Base everything on the provided context. Be specific and data-driven. Include 3-5 credible sources with URLs for technical references, market data, or architectural decisions.`;
 
 const ROADMAP_PROMPT = `You are an expert technical project manager building a roadmap. Think out loud as you review the prioritized stories, define phases, estimate effort, and assign stories to each phase. Show your planning reasoning naturally. Then output the roadmap as a JSON array in a code block.
 
@@ -75,6 +78,7 @@ export interface SseStepEnd {
   type: "step_end";
   step: string;
   result: unknown;
+  thinkingText: string;
 }
 
 export interface SseStepStartSpinner {
@@ -108,15 +112,16 @@ export type SseEvent =
   | SseError
   | SseDone;
 
-function parseJson<T>(text: string, label: string): T {
+function parseJson<T>(text: string, label: string): { result: T; thinkingText: string } {
   const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   const jsonStr = jsonMatch ? jsonMatch[1].trim() : text.trim();
+  const thinkingText = jsonMatch ? text.slice(0, text.indexOf("```")).trim() : "";
   try {
-    return JSON.parse(jsonStr) as T;
+    return { result: JSON.parse(jsonStr) as T, thinkingText };
   } catch {
     const bracketMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
     if (bracketMatch) {
-      return JSON.parse(bracketMatch[0]) as T;
+      return { result: JSON.parse(bracketMatch[0]) as T, thinkingText: text.slice(0, text.indexOf(bracketMatch[0])).trim() };
     }
     throw new Error(`Failed to parse ${label} as JSON. Response: ${text.slice(0, 300)}`);
   }
@@ -127,7 +132,7 @@ async function* streamStep(
   systemPrompt: string,
   userPrompt: string,
   project: Project,
-  persistFn: (project: Project, result: unknown) => void
+  persistFn: (project: Project, result: unknown, thinkingText: string) => void
 ): AsyncGenerator<SseEvent> {
   yield { type: "step_start", step };
 
@@ -144,9 +149,9 @@ async function* streamStep(
       }
     }
 
-    const result = parseJson(fullText, step);
-    persistFn(project, result);
-    yield { type: "step_end", step, result };
+    const { result, thinkingText } = parseJson(fullText, step);
+    persistFn(project, result, thinkingText);
+    yield { type: "step_end", step, result, thinkingText };
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     updateProject(project.id, { status: "error", error: msg });
@@ -159,6 +164,7 @@ export async function* runFullPipelineStream(
   project: Project
 ): AsyncGenerator<SseEvent> {
   let current = { ...project };
+  const rawAnalysis: Record<string, string> = {};
 
   // --- Step 1: Research (streams tokens) ---
   yield* streamStep(
@@ -166,8 +172,9 @@ export async function* runFullPipelineStream(
     RESEARCH_PROMPT,
     `Product Idea: ${current.idea}`,
     current,
-    (p, result) => {
-      current = updateProject(p.id, { research: result as Project["research"], status: "researching" });
+    (p, result, thinkingText) => {
+      rawAnalysis.research = thinkingText;
+      current = updateProject(p.id, { research: result as Project["research"], rawAnalysis, status: "researching" });
     }
   );
 
@@ -177,8 +184,9 @@ export async function* runFullPipelineStream(
     STORIES_PROMPT,
     `Product Idea: ${current.idea}\n\nMarket Research Summary: ${current.research?.summary || "N/A"}`,
     current,
-    (p, result) => {
-      current = updateProject(p.id, { stories: result as Project["stories"], status: "generating_stories" });
+    (p, result, thinkingText) => {
+      rawAnalysis.stories = thinkingText;
+      current = updateProject(p.id, { stories: result as Project["stories"], rawAnalysis, status: "generating_stories" });
     }
   );
 
@@ -201,8 +209,9 @@ export async function* runFullPipelineStream(
     PRD_PROMPT,
     `Product Idea: ${current.idea}\n\nStories: ${current.stories?.length || 0}\nWireframes: ${current.wireframes?.map((w: any) => w.title).join(", ") || "N/A"}\nMarket: ${current.research?.summary || "N/A"}`,
     current,
-    (p, result) => {
-      current = updateProject(p.id, { prd: result as Project["prd"], status: "generating_prd" });
+    (p, result, thinkingText) => {
+      rawAnalysis.prd = thinkingText;
+      current = updateProject(p.id, { prd: result as Project["prd"], rawAnalysis, status: "generating_prd" });
     }
   );
 
@@ -212,8 +221,9 @@ export async function* runFullPipelineStream(
     ROADMAP_PROMPT,
     `User Stories:\n${current.stories?.map((s) => `[${s.id}][${s.priority}][${s.moscow}] ${s.epic}: ${s.story}`).join("\n") || "N/A"}`,
     current,
-    (p, result) => {
-      current = updateProject(p.id, { roadmap: result as Project["roadmap"], status: "complete" });
+    (p, result, thinkingText) => {
+      rawAnalysis.roadmap = thinkingText;
+      current = updateProject(p.id, { roadmap: result as Project["roadmap"], rawAnalysis, status: "complete" });
     }
   );
 
