@@ -30,7 +30,7 @@ export default async function ProjectPage({
       <div className="mb-10">
         <div className="flex flex-wrap items-center gap-3 mb-2">
           <h1 className="text-3xl font-bold tracking-tight text-white">{project.name}</h1>
-          <span className={`rounded-full px-3 py-0.5 text-xs font-semibold ${project.status === "complete" ? "bg-green-600 text-white" : project.status === "error" ? "bg-red-600 text-white" : "bg-zinc-700 text-zinc-300"}`}>
+          <span className={`rounded-full px-3 py-0.5 text-xs font-semibold ${project.status === "complete" ? "bg-green-600 text-white" : project.status === "error" ? "bg-red-600 text-white" : "bg-zinc-700 text-white"}`}>
             {project.status.replace(/_/g, " ")}
           </span>
           <DeleteButton projectId={project.id} projectName={project.name} redirectTo="/projects" />
@@ -116,16 +116,12 @@ export default async function ProjectPage({
 
           <div className="grid gap-3">
             {project.stories.map((story) => {
-              const borderColor =
-                story.moscow === "Must" ? "border-l-red-500" :
-                story.moscow === "Should" ? "border-l-amber-500" :
-                story.moscow === "Could" ? "border-l-blue-500" : "border-l-zinc-700";
               const priColor =
                 story.priority === "P0" ? "bg-red-900 text-red-300" :
                 story.priority === "P1" ? "bg-amber-900 text-amber-300" : "bg-blue-900 text-blue-300";
 
               return (
-                <div key={story.id} className={`rounded-xl bg-zinc-900 border border-zinc-800 ${borderColor} border-l-4 p-4`}>
+                <div key={story.id} className="rounded-xl bg-zinc-900 border border-zinc-800 p-4 ring-1 ring-inset ring-transparent" style={{ boxShadow: story.moscow === "Must" ? "inset 3px 0 0 rgb(239,68,68)" : story.moscow === "Should" ? "inset 3px 0 0 rgb(245,158,11)" : story.moscow === "Could" ? "inset 3px 0 0 rgb(59,130,246)" : "none" }}>
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span className="font-mono text-[11px] text-zinc-500">{story.id}</span>
                     <span className="rounded bg-zinc-800 px-2 py-0.5 text-[10px] text-zinc-400">{story.epic}</span>
@@ -153,7 +149,7 @@ export default async function ProjectPage({
       {/* Wireframes */}
       {project.wireframes && project.wireframes.length > 0 && (
         <section className="mb-8">
-          <h2 className="mb-1 text-xl font-bold text-purple-500">Wireframes</h2>
+          <h2 className="mb-1 text-xl font-bold text-rose-400">Wireframes</h2>
           <p className="mb-5 font-mono text-xs text-zinc-500">{project.wireframes.length} screens</p>
 
           <div className="grid gap-4 sm:grid-cols-2">

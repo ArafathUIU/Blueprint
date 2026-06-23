@@ -14,7 +14,7 @@ const MAX_IDEA_LENGTH = 800;
 const STEP_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
   research: { label: "Research", icon: "\u{1F50D}", color: "text-red-400" },
   stories: { label: "Stories", icon: "\u{1F4CB}", color: "text-amber-400" },
-  wireframes: { label: "Design", icon: "\u{1F3A8}", color: "text-purple-400" },
+  wireframes: { label: "Design", icon: "\u{1F3A8}", color: "text-rose-400" },
   prd: { label: "PRD", icon: "\u{1F4C4}", color: "text-green-400" },
   roadmap: { label: "Roadmap", icon: "\u{1F5FA}\uFE0F", color: "text-cyan-400" },
 };

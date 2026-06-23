@@ -4,8 +4,8 @@ import { DeleteButton } from "@/components/delete-button";
 
 const STATUS_COLORS: Record<string, string> = {
   complete: "bg-green-600 text-white", error: "bg-red-600 text-white",
-  draft: "bg-zinc-700 text-zinc-300", researching: "bg-blue-600 text-white",
-  generating_stories: "bg-amber-600 text-white", generating_wireframes: "bg-purple-600 text-white",
+  draft: "bg-zinc-700 text-white", researching: "bg-blue-600 text-white",
+  generating_stories: "bg-amber-600 text-white", generating_wireframes: "bg-rose-600 text-white",
   generating_prd: "bg-green-700 text-white", generating_roadmap: "bg-cyan-600 text-white",
 };
 
@@ -52,7 +52,7 @@ export default function ProjectsListPage() {
                 <span>{new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                 {p.research && <span className="text-red-500/60">{'\u25CF'} Research</span>}
                 {p.stories && <span className="text-amber-500/60">{'\u25CF'} Stories</span>}
-                {p.wireframes && <span className="text-purple-500/60">{'\u25CF'} Wireframes</span>}
+                {p.wireframes && <span className="text-rose-400/60">{'\u25CF'} Wireframes</span>}
                 {p.prd && <span className="text-green-500/60">{'\u25CF'} PRD</span>}
                 {p.roadmap && <span className="text-cyan-500/60">{'\u25CF'} Roadmap</span>}
               </div>

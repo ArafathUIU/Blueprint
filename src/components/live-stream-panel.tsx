@@ -81,14 +81,14 @@ export function LiveStreamPanel({ entries, className }: LiveStreamPanelProps) {
                 <span className="text-white/30">
                   {"// "}&#9472;&#9472;&#9472;{" "}
                 </span>
-                <span className="font-semibold text-purple-400">
+                <span className="font-semibold text-rose-400">
                   {STEP_LABELS[entry.step] || entry.step}
                 </span>
                 <span className="text-white/30">
                   {" "}&#9472;&#9472;&#9472;
                 </span>
                 <svg
-                  className="h-3.5 w-3.5 animate-spin text-purple-400"
+                  className="h-3.5 w-3.5 animate-spin text-rose-400"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"

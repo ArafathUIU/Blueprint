@@ -23,7 +23,7 @@ export function WireframeWithChat({ wireframe, projectId }: WireframeWithChatPro
       {wireframe.annotations.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {wireframe.annotations.map((a, j) => (
-            <span key={j} className="rounded bg-purple-950 border border-purple-800 px-2 py-0.5 text-[10px] text-purple-300">{a}</span>
+            <span key={j} className="rounded bg-rose-950 border border-rose-800 px-2 py-0.5 text-[10px] text-rose-300">{a}</span>
           ))}
         </div>
       )}

@@ -64,7 +64,7 @@ export function WireframeChat({ projectId, wireframeId, currentSvg, onSvgUpdate 
         <div className="space-y-1 max-h-24 overflow-y-auto">
           {history.map((entry, i) => (
             <div key={i} className="flex gap-1.5 text-[10px]">
-              <span className={`shrink-0 font-semibold ${entry.role === "user" ? "text-purple-400" : entry.text === "updated" ? "text-green-400" : "text-red-400"}`}>
+              <span className={`shrink-0 font-semibold ${entry.role === "user" ? "text-rose-400" : entry.text === "updated" ? "text-green-400" : "text-red-400"}`}>
                 {entry.role === "user" ? ">" : entry.text === "updated" ? "✓" : "✗"}
               </span>
               <span className={entry.role === "user" ? "text-zinc-300" : "text-zinc-500"}>
@@ -85,12 +85,12 @@ export function WireframeChat({ projectId, wireframeId, currentSvg, onSvgUpdate 
           onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
           placeholder='e.g. "make the CTA bigger"'
           disabled={loading}
-          className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-[11px] text-white placeholder:text-zinc-500 focus:border-purple-500 focus:outline-none disabled:opacity-50"
+          className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-[11px] text-white placeholder:text-zinc-500 focus:border-rose-500 focus:outline-none disabled:opacity-50"
         />
         <button
           onClick={handleSend}
           disabled={loading || !input.trim()}
-          className="rounded-lg bg-purple-600 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-purple-500 disabled:opacity-40 transition-colors"
+          className="rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-rose-500 disabled:opacity-40 transition-colors"
         >
           {loading ? "..." : "Edit"}
         </button>
