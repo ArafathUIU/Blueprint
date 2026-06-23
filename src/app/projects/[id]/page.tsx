@@ -4,6 +4,7 @@ import { ExportButtons } from "@/components/export-buttons";
 import { DeleteButton } from "@/components/delete-button";
 import { WireframeWithChat } from "@/components/wireframe-with-chat";
 import { ThinkingBlock } from "@/components/thinking-block";
+import { GanttChart } from "@/components/gantt-chart";
 import type { UserStory } from "@/lib/types";
 
 export default async function ProjectPage({
@@ -260,6 +261,10 @@ export default async function ProjectPage({
           <p className="mb-5 font-mono text-xs text-zinc-500">{project.roadmap.length} phases</p>
 
           {project.rawAnalysis?.roadmap && <ThinkingBlock label="Agent Analysis" text={project.rawAnalysis.roadmap} accent="cyan" />}
+
+          <div className="mb-6">
+            <GanttChart phases={project.roadmap} />
+          </div>
 
           <div className="space-y-4">
             {project.roadmap.map((phase, i) => (
