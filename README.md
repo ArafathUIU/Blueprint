@@ -35,7 +35,7 @@ macOS-style terminal typewriter showing the agent's internal monologue. Neural n
   <img src="https://raw.githubusercontent.com/ArafathUIU/Blueprint/main/public/screenshots/landing.png" alt="Landing page with terminal typewriter" width="800" />
 </p>
 
-### 2. Idea Input (`/new`)
+### 2. How it Works
 Dark form with live SSE-streamed pipeline progress. Terminal-style output panel shows agent thinking in natural language. Step indicators update in real-time.
 
 <p align="center">
